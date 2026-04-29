@@ -4,7 +4,9 @@ export type Lab = {
   shortDescription: string;
   goal?: string;
   keyConcepts?: string[];
+  keyEquation?: string;
   theory?: string[];
+  observations?: string[];
   simulationId?: string;
 };
 
