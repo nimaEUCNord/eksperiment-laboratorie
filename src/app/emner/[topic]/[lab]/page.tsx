@@ -85,6 +85,19 @@ export default async function LabPage({
         </section>
       ) : null}
 
+      {lab.keyEquation ? (
+        <section className="mt-8">
+          <h2 className="text-xl font-semibold text-slate-900">Nøgleligning</h2>
+          <div
+            className={`mt-3 flex items-center justify-center rounded-2xl border ${accent.border} ${accent.bgSoft} px-6 py-8`}
+          >
+            <span className="font-serif text-4xl tracking-wide text-slate-900 sm:text-5xl">
+              {renderEquation(lab.keyEquation)}
+            </span>
+          </div>
+        </section>
+      ) : null}
+
       <section className="mt-10">
         <h2 className="text-xl font-semibold text-slate-900">Simulation</h2>
         <p className="mt-2 text-sm text-slate-600">
@@ -107,6 +120,29 @@ export default async function LabPage({
         </section>
       ) : null}
 
+      {lab.observations && lab.observations.length > 0 ? (
+        <section className="mt-10">
+          <h2 className="text-xl font-semibold text-slate-900">I laboratoriet</h2>
+          <p className="mt-2 text-sm text-slate-600">
+            Når du står i lokalet med en rigtig fjeder, er det disse ting, du
+            skal observere og måle.
+          </p>
+          <ol className="mt-4 space-y-3">
+            {lab.observations.map((step, i) => (
+              <li key={i} className="flex gap-3 text-slate-700">
+                <span
+                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white ${accent.bg}`}
+                  aria-hidden
+                >
+                  {i + 1}
+                </span>
+                <span>{step}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
+      ) : null}
+
       {!isFleshedOut ? (
         <section className="mt-12 rounded-xl border border-slate-200 bg-slate-50 p-6 text-slate-700">
           <h2 className="text-lg font-semibold text-slate-900">Under udarbejdelse</h2>
@@ -122,4 +158,18 @@ export default async function LabPage({
 
 function hasFullContent(lab: Lab): boolean {
   return Boolean(lab.goal && lab.keyConcepts && lab.keyConcepts.length > 0);
+}
+
+function renderEquation(eq: string) {
+  return eq.split(/(\s+)/).map((token, i) => {
+    if (/^\s+$/.test(token)) return token;
+    if (/^[A-Za-z]$/.test(token)) {
+      return (
+        <span key={i} className="italic">
+          {token}
+        </span>
+      );
+    }
+    return <span key={i}>{token}</span>;
+  });
 }

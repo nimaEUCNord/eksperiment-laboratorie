@@ -207,7 +207,7 @@ export default function SkraatKast() {
 
   return (
     <div className="space-y-4">
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white [&_canvas]:block [&_canvas]:h-auto [&_canvas]:max-w-full">
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white [&_canvas]:block [&_canvas]:h-auto [&_canvas]:max-w-full [&_canvas:not(:last-of-type)]:hidden">
         <P5Canvas sketch={sketch} angle={angle} v0={v0} />
       </div>
 

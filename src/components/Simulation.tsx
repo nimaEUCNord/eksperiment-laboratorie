@@ -16,6 +16,10 @@ const sims: Record<string, ComponentType> = {
     ssr: false,
     loading: SimulationLoading,
   }),
+  "hookes-lov": dynamic(() => import("./sims/HookesLov"), {
+    ssr: false,
+    loading: SimulationLoading,
+  }),
 };
 
 export function Simulation({ simulationId }: { simulationId?: string }) {
