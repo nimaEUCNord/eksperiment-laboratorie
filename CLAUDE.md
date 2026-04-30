@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Session memory
+
+Project memory is stored in `.claude/memory/`. Read `.claude/memory/MEMORY.md` at the start of every session to load context from previous conversations.
+
 ## What this is
 
 Eksperiment Laboratorie — a Danish-language Next.js site of physics labs for HTX Fysik B and A. Each lab features a real experiment tightly coupled to interactive p5.js simulations. All UI copy is in Danish; keep new content in Danish unless asked otherwise.
