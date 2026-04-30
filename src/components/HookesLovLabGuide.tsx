@@ -15,32 +15,73 @@ const HookesLovSim = dynamic(() => import("./sims/HookesLov"), {
 });
 
 type Mode = "guidet" | "semi" | "open";
-type Phase = "choose" | 1 | 2 | 3 | "conclusion";
+type Phase = "choose" | 1 | 2 | 3 | 4 | 5;
 type Row = { massG: string; extensionMm: string };
 
 const SIM_K = 5;
 const EMPTY_ROW = (): Row => ({ massG: "", extensionMm: "" });
 
 const PHASES = [
-  { key: 1, label: "Forberedelse" },
-  { key: 2, label: "Mål" },
-  { key: 3, label: "Analysér" },
-  { key: "conclusion", label: "Konklusion" },
+  { key: 1, label: "Planlæg" },
+  { key: 2, label: "Opstil" },
+  { key: 3, label: "Mål" },
+  { key: 4, label: "Analysér" },
+  { key: 5, label: "Konkludér" },
 ] as const;
+
+const SETUP_ITEMS = [
+  "Simulationen er nulstillet (forlængelse = 0 mm ved ingen masse)",
+  "Jeg har valgt mindst 6 masseværdier jævnt fordelt over arbejdsområdet",
+  "Jeg er klar til at aflæse forlængelsen, når systemet er i ro (ikke svinger)",
+];
+
+const CONCLUSION_QUESTIONS = [
+  {
+    q: "1. Beskriv den sammenhæng, du fandt mellem forlængelse og kraft. Stemmer den overens med Hookes lov (F = k · x)?",
+    ph: "Beskriv den lineære sammenhæng du observerede…",
+  },
+  {
+    q: "2. Hvad målte du som fjederkonstant k? Stemmer det med simulationens værdi på 5,0 N/m? Hvad kan forklare en eventuel forskel?",
+    ph: "Min k var… og afveg med… fordi…",
+  },
+  {
+    q: "3. Nævn to mulige fejlkilder i dette forsøg. Hvordan ville de påvirke din måling af k?",
+    ph: "Fejlkilde 1:… Fejlkilde 2:…",
+  },
+  {
+    q: "4. Giv et eksempel fra hverdagen, hvor Hookes lov er vigtig.",
+    ph: "F.eks. i bilaffjedringer, præcisionsvægte, stødabsorbere…",
+  },
+];
 
 type Props = { accent: AccentClasses };
 
 export default function HookesLovLabGuide({ accent }: Props) {
   const [mode, setMode] = useState<Mode | null>(null);
   const [phase, setPhase] = useState<Phase>("choose");
-  const [prediction, setPrediction] = useState("");
-  const [rows, setRows] = useState<Row[]>(() =>
-    Array.from({ length: 6 }, EMPTY_ROW),
-  );
-  const [openHints, setOpenHints] = useState<Set<string>>(new Set());
+
+  // Phase 1 state
+  const [hypothesis, setHypothesis] = useState("");
+  const [varIndependent, setVarIndependent] = useState("");
+  const [varDependent, setVarDependent] = useState("");
+  const [varControl, setVarControl] = useState("");
+
+  // Phase 2 state
+  const [setupChecked, setSetupChecked] = useState([false, false, false]);
+
+  // Phase 3 state
+  const [rows, setRows] = useState<Row[]>(() => Array.from({ length: 6 }, EMPTY_ROW));
+
+  // Phase 4 state
   const [studentK, setStudentK] = useState("");
+
+  // Phase 5 state
+  const [reflections, setReflections] = useState(["", "", "", ""]);
   const [reflection, setReflection] = useState("");
   const [showFacit, setShowFacit] = useState(false);
+
+  // Shared
+  const [openHints, setOpenHints] = useState<Set<string>>(new Set());
 
   const validRows = useMemo(
     () =>
@@ -65,8 +106,7 @@ export default function HookesLovLabGuide({ accent }: Props) {
     return den > 0 ? num / den : null;
   }, [validRows]);
 
-  const canProceedToPhase3 = validRows.length >= 4;
-
+  const canProceedToPhase4 = validRows.length >= 4;
   const studentKNum = parseFloat(studentK);
   const percentDiff =
     kFit !== null && Number.isFinite(studentKNum) && studentKNum > 0
@@ -74,9 +114,7 @@ export default function HookesLovLabGuide({ accent }: Props) {
       : null;
 
   const updateRow = (i: number, field: keyof Row, value: string) =>
-    setRows((prev) =>
-      prev.map((r, idx) => (idx === i ? { ...r, [field]: value } : r)),
-    );
+    setRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, [field]: value } : r)));
 
   const toggleHint = (id: string) =>
     setOpenHints((prev) => {
@@ -85,18 +123,20 @@ export default function HookesLovLabGuide({ accent }: Props) {
       return next;
     });
 
-  const phaseIndex = (p: Phase) => {
-    if (p === "choose") return -1;
-    if (p === "conclusion") return 3;
-    return (p as number) - 1;
-  };
+  const toggleSetup = (i: number) =>
+    setSetupChecked((prev) => prev.map((v, idx) => (idx === i ? !v : v)));
+
+  const updateReflection = (i: number, value: string) =>
+    setReflections((prev) => prev.map((v, idx) => (idx === i ? value : v)));
+
+  const phaseIndex = (p: Phase) => (p === "choose" ? -1 : (p as number) - 1);
+
+  // ── Mode selection ──────────────────────────────────────────────────────────
 
   if (phase === "choose") {
     return (
       <div>
-        <h2 className="text-xl font-semibold text-slate-900">
-          Laboratorieguide
-        </h2>
+        <h2 className="text-xl font-semibold text-slate-900">Laboratorieguide</h2>
         <p className="mt-2 text-slate-600">
           Vælg den undersøgelsesform, der passer til jeres time.
         </p>
@@ -128,9 +168,7 @@ export default function HookesLovLabGuide({ accent }: Props) {
               }}
               className={`rounded-xl border-2 p-5 text-left transition-colors hover:${accent.bgSoft} hover:${accent.border} border-slate-200 bg-white`}
             >
-              <div className={`text-base font-semibold ${accent.text}`}>
-                {title}
-              </div>
+              <div className={`text-base font-semibold ${accent.text}`}>{title}</div>
               <div className="mt-1.5 text-sm text-slate-600">{desc}</div>
             </button>
           ))}
@@ -143,9 +181,7 @@ export default function HookesLovLabGuide({ accent }: Props) {
 
   return (
     <div>
-      <h2 className="text-xl font-semibold text-slate-900">
-        Laboratorieguide
-      </h2>
+      <h2 className="text-xl font-semibold text-slate-900">Laboratorieguide</h2>
 
       {/* Progress bar */}
       <div className="mt-4 flex items-center gap-0">
@@ -172,7 +208,7 @@ export default function HookesLovLabGuide({ accent }: Props) {
               </div>
               {i < PHASES.length - 1 && (
                 <div
-                  className={`mb-4 h-0.5 w-8 sm:w-16 ${currentIdx > i ? accent.bg : "bg-slate-200"}`}
+                  className={`mb-4 h-0.5 w-6 sm:w-12 ${currentIdx > i ? accent.bg : "bg-slate-200"}`}
                 />
               )}
             </div>
@@ -180,58 +216,114 @@ export default function HookesLovLabGuide({ accent }: Props) {
         })}
       </div>
 
-      {/* Phase 1 */}
+      {/* ── Phase 1: Planlæg ─────────────────────────────────────────────────── */}
       {phase === 1 && (
         <div className="mt-8 space-y-6">
-          <div>
-            <h3 className="text-lg font-semibold text-slate-900">
-              Fase 1 — Forberedelse
-            </h3>
-            {mode === "guidet" && (
-              <div
-                className={`mt-3 rounded-xl border ${accent.border} ${accent.bgSoft} p-4 text-sm text-slate-700 space-y-1`}
-              >
-                <p className="font-medium text-slate-800">Hvad skal du gøre:</p>
-                <ol className="mt-2 list-decimal list-inside space-y-1">
-                  <li>Kig på simulationen herunder.</li>
-                  <li>Træk i skyderen for massen og observér, hvad der sker med forlængelsen.</li>
-                  <li>Prøv også at ændre fjederkonstanten k.</li>
-                  <li>Skriv din forudsigelse i feltet nedenfor, inden I går i gang med det fysiske forsøg.</li>
-                </ol>
-              </div>
-            )}
-            {mode === "semi" && (
-              <div className="mt-3 text-sm text-slate-600">
-                <p>Brug simulationen til at danne dig et overblik over sammenhængen.</p>
-                <HintBox
-                  id="p1-h1"
-                  label="Hvad sker der med forlængelsen?"
-                  content="Øg massen og se, om forlængelsen vokser lineært eller ej. Prøv at doble massen – hvad sker der med forlængelsen?"
-                  openHints={openHints}
-                  toggle={toggleHint}
-                />
-              </div>
-            )}
-          </div>
+          <h3 className="text-lg font-semibold text-slate-900">Fase 1 — Planlæg</h3>
 
-          <HookesLovSim />
-
-          {mode !== "open" && (
-            <div>
-              <label className="block text-sm font-medium text-slate-700">
-                Hvad tror du sker med forlængelsen, når du øger massen?
-              </label>
-              <textarea
-                value={prediction}
-                onChange={(e) => setPrediction(e.target.value)}
-                rows={3}
-                placeholder="Skriv din forudsigelse her…"
-                className="mt-2 w-full rounded-xl border border-slate-200 p-3 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400"
+          {mode === "guidet" && (
+            <div
+              className={`rounded-xl border ${accent.border} ${accent.bgSoft} p-4 text-sm text-slate-700 space-y-2`}
+            >
+              <p className="font-medium text-slate-800">Undersøgelsesspørgsmål:</p>
+              <p className="italic text-slate-600">
+                Hvordan afhænger en fjedres forlængelse af den påhængte masse?
+              </p>
+              <p className="font-medium text-slate-800 mt-3">Fremgangsmåde:</p>
+              <ol className="mt-1 list-decimal list-inside space-y-1.5">
+                <li>Kig på simulationen herunder og træk i masseglidseren.</li>
+                <li>Observer hvad der sker med forlængelsen, når du fordobler massen.</li>
+                <li>Skriv din hypotese ved hjælp af sætningsstarteren nedenfor.</li>
+                <li>Identificér dine variable inden du fortsætter.</li>
+              </ol>
+            </div>
+          )}
+          {mode === "semi" && (
+            <div className="mt-3 text-sm text-slate-600 space-y-1">
+              <p>
+                Formulér en hypotese om sammenhængen mellem masse og forlængelse, og
+                identificér dine variable.
+              </p>
+              <HintBox
+                id="p1-h1"
+                label="Hvad sker der med forlængelsen?"
+                content="Øg massen og se, om forlængelsen vokser lineært. Prøv at doble massen – hvad sker der med forlængelsen?"
+                openHints={openHints}
+                toggle={toggleHint}
+              />
+              <HintBox
+                id="p1-h2"
+                label="Hvilke variable har du?"
+                content="Den uafhængige variabel er det, du ændrer (massen). Den afhængige variabel er det, du måler (forlængelsen). Kontrolvariable holdes konstante – hvad skal du holde konstant her?"
+                openHints={openHints}
+                toggle={toggleHint}
               />
             </div>
           )}
 
-          <div className="flex justify-between items-center">
+          <HookesLovSim />
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700">
+              {mode === "guidet"
+                ? "Min hypotese er, at forlængelsen x er ______ proportional med kraften F, fordi…"
+                : mode === "semi"
+                  ? "Skriv din hypotese:"
+                  : "Skriv din hypotese og beskriv, hvilke variable du vil undersøge."}
+            </label>
+            <textarea
+              value={hypothesis}
+              onChange={(e) => setHypothesis(e.target.value)}
+              rows={3}
+              placeholder={
+                mode === "guidet"
+                  ? "Min hypotese er, at forlængelsen er direkte proportional med kraften, fordi…"
+                  : "Skriv din hypotese her…"
+              }
+              className="mt-2 w-full rounded-xl border border-slate-200 p-3 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400"
+            />
+          </div>
+
+          {mode !== "open" && (
+            <div className="space-y-3">
+              <p className="text-sm font-medium text-slate-700">Identificér dine variable:</p>
+              <div className="grid gap-3 sm:grid-cols-3">
+                {[
+                  {
+                    label: "Uafhængig variabel (det du ændrer)",
+                    value: varIndependent,
+                    set: setVarIndependent,
+                    ph: "Massen",
+                  },
+                  {
+                    label: "Afhængig variabel (det du måler)",
+                    value: varDependent,
+                    set: setVarDependent,
+                    ph: "Forlængelsen",
+                  },
+                  {
+                    label: "Kontrolvariable (holdes konstante)",
+                    value: varControl,
+                    set: setVarControl,
+                    ph: "Fjederkonstanten, temperaturen",
+                  },
+                ].map(({ label, value, set, ph }) => (
+                  <div key={label}>
+                    <label className="block text-xs font-medium text-slate-600">{label}</label>
+                    <input
+                      type="text"
+                      value={value}
+                      onChange={(e) => set(e.target.value)}
+                      placeholder={ph}
+                      className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between">
             <button
               onClick={() => {
                 setMode(null);
@@ -251,40 +343,118 @@ export default function HookesLovLabGuide({ accent }: Props) {
         </div>
       )}
 
-      {/* Phase 2 */}
+      {/* ── Phase 2: Opstil ──────────────────────────────────────────────────── */}
       {phase === 2 && (
         <div className="mt-8 space-y-6">
+          <h3 className="text-lg font-semibold text-slate-900">Fase 2 — Opstil</h3>
+
+          {mode === "guidet" && (
+            <div
+              className={`rounded-xl border ${accent.border} ${accent.bgSoft} p-4 text-sm text-slate-700 space-y-2`}
+            >
+              <p className="font-medium text-slate-800">Klargør simulationen:</p>
+              <ol className="mt-1 list-decimal list-inside space-y-1.5">
+                <li>Start simulationen herunder og bekræft, at fjederen vises korrekt.</li>
+                <li>
+                  Sæt massen til 0 for at nulstille forlængelsen til 0 mm — det er dit nulpunkt.
+                </li>
+                <li>
+                  Notér at simulationen viser forlængelsen direkte i mm – du behøver ikke
+                  konvertere.
+                </li>
+                <li>
+                  Beslut dig for dine masseværdier: brug mindst 6 forskellige værdier fra ~50 g
+                  til ~500 g.
+                </li>
+              </ol>
+              <p className="font-medium text-slate-800 mt-3">Tjekliste:</p>
+              <div className="mt-1 space-y-2">
+                {SETUP_ITEMS.map((item, i) => (
+                  <label key={i} className="flex items-start gap-2 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={setupChecked[i]}
+                      onChange={() => toggleSetup(i)}
+                      className="mt-0.5 rounded"
+                    />
+                    <span className={setupChecked[i] ? "text-slate-400 line-through" : ""}>
+                      {item}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+          {mode === "semi" && (
+            <div className="mt-3 text-sm text-slate-600 space-y-1">
+              <p>
+                Initialisér simulationen og bekræft, at nulpunktet er korrekt, inden du begynder
+                at registrere data.
+              </p>
+              <HintBox
+                id="p2-h1"
+                label="Hvad skal jeg kontrollere?"
+                content="Sæt massen til 0 og tjek, at forlængelsen er 0 mm. Vent altid til systemet er i ro (ikke svinger), inden du aflæser forlængelsen ved en given masse."
+                openHints={openHints}
+                toggle={toggleHint}
+              />
+            </div>
+          )}
+
+          <HookesLovSim />
+
+          <div className="flex justify-end">
+            <button
+              onClick={() => setPhase(3)}
+              className={`rounded-xl px-6 py-2.5 text-sm font-medium text-white ${accent.bg}`}
+            >
+              Fortsæt →
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Phase 3: Mål ─────────────────────────────────────────────────────── */}
+      {phase === 3 && (
+        <div className="mt-8 space-y-6">
           <div>
-            <h3 className="text-lg font-semibold text-slate-900">
-              Fase 2 — Mål
-            </h3>
+            <h3 className="text-lg font-semibold text-slate-900">Fase 3 — Mål</h3>
             {mode === "guidet" && (
               <div
                 className={`mt-3 rounded-xl border ${accent.border} ${accent.bgSoft} p-4 text-sm text-slate-700`}
               >
                 <p className="font-medium text-slate-800">Fremgangsmåde:</p>
                 <ol className="mt-2 list-decimal list-inside space-y-1.5">
-                  <li>Hæng fjederen op i stativet.</li>
-                  <li>Mål fjederens naturlige længde uden nogen masse (nulpunktet).</li>
-                  <li>Tilsæt en masse og vent, til systemet er i ro.</li>
-                  <li>Mål forlængelsen fra nulpunktet og notér den i tabellen.</li>
-                  <li>Gentag med mindst 6 forskellige masser fordelt over fjederens arbejdsområde.</li>
-                  <li>Kraft F beregnes automatisk som F = m·g.</li>
+                  <li>Vælg en startmasse (f.eks. 50 g). Indstil den i simulationen.</li>
+                  <li>
+                    Vent til fjæderen er i ro. Aflæs forlængelsen i mm og indtast begge værdier i
+                    tabellen.
+                  </li>
+                  <li>Øg massen med ca. 50–100 g ad gangen. Gentag trin 2.</li>
+                  <li>
+                    Forsøg at dække et bredt interval — brug mindst 6 masseværdier fra ca. 50 g
+                    til 500 g.
+                  </li>
+                  <li>
+                    Kolonnen "Kraft F (N)" beregnes automatisk. Kontrollér, at værdierne ser
+                    rimelige ud.
+                  </li>
+                  <li>Du skal have mindst 4 gyldige datapunkter for at fortsætte.</li>
                 </ol>
               </div>
             )}
             {mode === "semi" && (
               <div className="mt-3 text-sm text-slate-600 space-y-1">
-                <p>Mål forlængelsen for mindst 6 masser og udfyld tabellen.</p>
+                <p>Mål forlængelsen for mindst 6 masser og udfyld tabellen. Kraften beregnes automatisk.</p>
                 <HintBox
-                  id="p2-h1"
-                  label="Hvad er nulpunktet?"
-                  content="Mål fjederens naturlige længde uden nogen masse. Al forlængelse måles relativt hertil, dvs. ny længde minus naturlig længde."
+                  id="p3-h1"
+                  label="Hvordan fordeler jeg mine masser?"
+                  content="Brug en jævn fordeling af masseværdier – undgå at bruge 5 næsten identiske masser og ét udligger. En god fordeling giver en mere pålidelig hældning."
                   openHints={openHints}
                   toggle={toggleHint}
                 />
                 <HintBox
-                  id="p2-h2"
+                  id="p3-h2"
                   label="Hvad hvis fjederen svinger?"
                   content="Vent til systemet er kommet i ro (ligevægt), inden du aflæser forlængelsen. Du kan dæmpe svingningerne ved forsigtigt at holde massen stille."
                   openHints={openHints}
@@ -294,12 +464,13 @@ export default function HookesLovLabGuide({ accent }: Props) {
             )}
           </div>
 
-          {/* Data table */}
+          <HookesLovSim />
+
           <div className="overflow-x-auto rounded-xl border border-slate-200">
             <table className="w-full text-sm">
               <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
                 <tr>
-                  <th className="px-4 py-3 text-left">Masse tilsat (g)</th>
+                  <th className="px-4 py-3 text-left">Masse (g)</th>
                   <th className="px-4 py-3 text-left">Forlængelse (mm)</th>
                   <th className="px-4 py-3 text-right">Kraft F (N)</th>
                 </tr>
@@ -308,9 +479,7 @@ export default function HookesLovLabGuide({ accent }: Props) {
                 {rows.map((row, i) => {
                   const m = parseFloat(row.massG);
                   const f =
-                    Number.isFinite(m) && m > 0
-                      ? ((m / 1000) * 9.82).toFixed(4)
-                      : null;
+                    Number.isFinite(m) && m > 0 ? ((m / 1000) * 9.82).toFixed(4) : null;
                   return (
                     <tr key={i} className="bg-white">
                       <td className="px-3 py-2">
@@ -319,9 +488,7 @@ export default function HookesLovLabGuide({ accent }: Props) {
                           min="0"
                           step="any"
                           value={row.massG}
-                          onChange={(e) =>
-                            updateRow(i, "massG", e.target.value)
-                          }
+                          onChange={(e) => updateRow(i, "massG", e.target.value)}
                           placeholder="0"
                           className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-sky-400"
                         />
@@ -332,9 +499,7 @@ export default function HookesLovLabGuide({ accent }: Props) {
                           min="0"
                           step="any"
                           value={row.extensionMm}
-                          onChange={(e) =>
-                            updateRow(i, "extensionMm", e.target.value)
-                          }
+                          onChange={(e) => updateRow(i, "extensionMm", e.target.value)}
                           placeholder="0"
                           className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-sky-400"
                         />
@@ -362,13 +527,13 @@ export default function HookesLovLabGuide({ accent }: Props) {
 
           <div className="flex items-center justify-between">
             <span className="text-sm text-slate-500">
-              {canProceedToPhase3
+              {canProceedToPhase4
                 ? `${validRows.length} gyldige målepunkter`
                 : `Udfyld mindst 4 rækker for at fortsætte (${validRows.length}/4)`}
             </span>
             <button
-              disabled={!canProceedToPhase3}
-              onClick={() => setPhase(3)}
+              disabled={!canProceedToPhase4}
+              onClick={() => setPhase(4)}
               className={`rounded-xl px-6 py-2.5 text-sm font-medium text-white transition-opacity ${accent.bg} disabled:cursor-not-allowed disabled:opacity-40`}
             >
               Fortsæt →
@@ -377,42 +542,54 @@ export default function HookesLovLabGuide({ accent }: Props) {
         </div>
       )}
 
-      {/* Phase 3 */}
-      {phase === 3 && (
+      {/* ── Phase 4: Analysér ────────────────────────────────────────────────── */}
+      {phase === 4 && (
         <div className="mt-8 space-y-6">
           <div>
-            <h3 className="text-lg font-semibold text-slate-900">
-              Fase 3 — Analysér
-            </h3>
+            <h3 className="text-lg font-semibold text-slate-900">Fase 4 — Analysér</h3>
             {mode === "guidet" && (
               <div
                 className={`mt-3 rounded-xl border ${accent.border} ${accent.bgSoft} p-4 text-sm text-slate-700 space-y-1`}
               >
-                <p className="font-medium text-slate-800">Sådan læser du grafen:</p>
+                <p className="font-medium text-slate-800">
+                  Sådan aflæser du fjederkonstanten:
+                </p>
                 <ol className="mt-2 list-decimal list-inside space-y-1.5">
-                  <li>Grafen viser dine målinger (punkter) og en bedste rette linje beregnet fra dem.</li>
-                  <li>Hookes lov siger F = k·x, så hældningen af linjen er fjederkonstanten k.</li>
                   <li>
-                    Vælg to punkter på linjen og beregn: k = ΔF/Δx
+                    Grafen viser dine målinger (punkter) og en bedste rette linje beregnet fra
+                    dem.
                   </li>
-                  <li>Skriv din aflæste k nedenfor og sammenlign med simulationen.</li>
+                  <li>
+                    Hookes lov siger F = k·x, så{" "}
+                    <strong>hældningen af linjen er fjederkonstanten k</strong>.
+                  </li>
+                  <li>
+                    Vælg to punkter på linjen (ikke dine datapunkter) og beregn: k = ΔF / Δx.
+                  </li>
+                  <li>
+                    Indtast din aflæste k nedenfor og se, hvor tæt du er på simulationens
+                    referencenværdi.
+                  </li>
                 </ol>
               </div>
             )}
             {mode === "semi" && (
               <div className="mt-3 text-sm text-slate-600 space-y-1">
-                <p>Grafen viser dine data og en bedste-tilpasset linje.</p>
+                <p>
+                  Aflæs fjederkonstanten k fra grafens hældning og sammenlign med
+                  referencenværdien.
+                </p>
                 <HintBox
-                  id="p3-h1"
+                  id="p4-h1"
                   label="Hvordan finder jeg k fra grafen?"
-                  content="Hældningen af F-x-grafen er k. Find to punkter på linjen og beregn ΔF / Δx. Enheden er N/m."
+                  content="Hældningen af F-x-grafen er k. Find to punkter på den bedste rette linje – ikke dine datapunkter – og beregn ΔF / Δx. Enheden er N/m."
                   openHints={openHints}
                   toggle={toggleHint}
                 />
                 <HintBox
-                  id="p3-h2"
+                  id="p4-h2"
                   label="Hvad betyder afvigelsen?"
-                  content="En afvigelse under 10 % er typisk acceptabel for håndmålinger med en lineal. Større afvigelse kan skyldes unøjagtig aflæsning af forlængelsen eller at fjederen blev trukket ud over det elastiske område."
+                  content="En afvigelse under 10 % er meget godt for dette forsøg. 10–20 % er acceptabelt. Over 20 % tyder på en systematisk fejl – har du nulstillet korrekt?"
                   openHints={openHints}
                   toggle={toggleHint}
                 />
@@ -428,7 +605,6 @@ export default function HookesLovLabGuide({ accent }: Props) {
             </p>
           )}
 
-          {/* Student k input */}
           <div>
             <label className="block text-sm font-medium text-slate-700">
               Din aflæste fjederkonstant:
@@ -448,20 +624,15 @@ export default function HookesLovLabGuide({ accent }: Props) {
             </div>
           </div>
 
-          {/* Comparison panel */}
           {percentDiff !== null && (
-            <div
-              className={`rounded-xl border ${accent.border} ${accent.bgSoft} p-4`}
-            >
+            <div className={`rounded-xl border ${accent.border} ${accent.bgSoft} p-4`}>
               <p className="text-sm font-medium text-slate-700">
                 Sammenligning med simulationens fjeder (k = {SIM_K} N/m):
               </p>
               <div className="mt-3 grid grid-cols-3 gap-4 text-center">
                 <div>
                   <div className="text-xs text-slate-500">Din målte k</div>
-                  <div
-                    className={`mt-1 font-mono text-lg font-semibold ${accent.text}`}
-                  >
+                  <div className={`mt-1 font-mono text-lg font-semibold ${accent.text}`}>
                     {studentKNum.toFixed(2)} N/m
                   </div>
                 </div>
@@ -491,7 +662,7 @@ export default function HookesLovLabGuide({ accent }: Props) {
 
           <div className="flex justify-end">
             <button
-              onClick={() => setPhase("conclusion")}
+              onClick={() => setPhase(5)}
               className={`rounded-xl px-6 py-2.5 text-sm font-medium text-white ${accent.bg}`}
             >
               Fortsæt →
@@ -500,23 +671,74 @@ export default function HookesLovLabGuide({ accent }: Props) {
         </div>
       )}
 
-      {/* Conclusion */}
-      {phase === "conclusion" && (
+      {/* ── Phase 5: Konkludér ───────────────────────────────────────────────── */}
+      {phase === 5 && (
         <div className="mt-8 space-y-6">
-          <h3 className="text-lg font-semibold text-slate-900">Konklusion</h3>
+          <h3 className="text-lg font-semibold text-slate-900">Fase 5 — Konkludér</h3>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700">
-              Hvad opdagede du i dette forsøg?
-            </label>
-            <textarea
-              value={reflection}
-              onChange={(e) => setReflection(e.target.value)}
-              rows={5}
-              placeholder="Beskriv dine observationer, resultater og hvad du lærte…"
-              className="mt-2 w-full rounded-xl border border-slate-200 p-3 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400"
-            />
-          </div>
+          {mode === "guidet" && (
+            <div className="space-y-4">
+              {CONCLUSION_QUESTIONS.map(({ q, ph }, i) => (
+                <div key={i}>
+                  <label className="block text-sm font-medium text-slate-700">{q}</label>
+                  <textarea
+                    value={reflections[i]}
+                    onChange={(e) => updateReflection(i, e.target.value)}
+                    rows={2}
+                    placeholder={ph}
+                    className="mt-2 w-full rounded-xl border border-slate-200 p-3 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {mode === "semi" && (
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-slate-700">
+                  Skriv en konklusion, der beskriver, hvad du fandt, og om det stemmer med
+                  Hookes lov.
+                </label>
+                <textarea
+                  value={reflection}
+                  onChange={(e) => setReflection(e.target.value)}
+                  rows={4}
+                  placeholder="Beskriv dine fund og sammenlign med teorien…"
+                  className="mt-2 w-full rounded-xl border border-slate-200 p-3 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                />
+              </div>
+              <HintBox
+                id="p5-h1"
+                label="Hvad skal en god konklusion indeholde?"
+                content="En god konklusion svarer på: Hvad fandt du? Stemmer det med Hookes lov (F = k·x)? Hvad kan forklare afvigelsen fra de 5 N/m?"
+                openHints={openHints}
+                toggle={toggleHint}
+              />
+              <HintBox
+                id="p5-h2"
+                label="Hvilke fejlkilder kan jeg nævne?"
+                content="Tænk på: aflæsning af forlængelsen mens fjederen stadig svingede lidt, afrundingsfejl ved indlæsning af data, eller at fjederen blev trukket let ud over det elastiske område."
+                openHints={openHints}
+                toggle={toggleHint}
+              />
+            </div>
+          )}
+
+          {mode === "open" && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700">
+                Skriv en kort konklusion om, hvad du fandt i dette forsøg.
+              </label>
+              <textarea
+                value={reflection}
+                onChange={(e) => setReflection(e.target.value)}
+                rows={5}
+                placeholder="Din konklusion…"
+                className="mt-2 w-full rounded-xl border border-slate-200 p-3 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400"
+              />
+            </div>
+          )}
 
           <div>
             {!showFacit ? (
@@ -530,24 +752,18 @@ export default function HookesLovLabGuide({ accent }: Props) {
               <div
                 className={`rounded-xl border ${accent.border} ${accent.bgSoft} p-4 text-sm text-slate-700 space-y-2`}
               >
-                <p className="font-semibold text-slate-800">
-                  Forventet konklusion:
+                <p className="font-semibold text-slate-800">Forventet konklusion:</p>
+                <p>
+                  Vi fandt, at forlængelsen af fjæderen er direkte proportional med den påhængte
+                  kraft, i overensstemmelse med Hookes lov F = k · x. Grafen viste en ret linje
+                  gennem origo, og hældningen gav fjederkonstanten k ≈ 5 N/m, hvilket stemmer
+                  godt med simulationens referencenværdi.
                 </p>
                 <p>
-                  Forsøget bekræfter Hookes lov: fjederkraften er proportional
-                  med forlængelsen. Grafen af F mod x er en ret linje, og
-                  hældningen er fjederkonstanten k.
-                </p>
-                <p>
-                  Din målte k bør ligge tæt på 5 N/m for
-                  simulationens fjeder — afvigelser skyldes typisk
-                  måleusikkerhed i aflæsning af forlængelsen med lineal, eller
-                  at fjederen er trukket lidt ud over sit elastiske område.
-                </p>
-                <p>
-                  Sammenhængen F = k·x gælder kun i det lineære (elastiske)
-                  område. Grafen bør gå tæt på origo, da der ingen fjederkraft
-                  er ved nul forlængelse.
+                  En eventuel afvigelse skyldes primært, at forlængelsen blev aflæst mens
+                  fjæderen stadig svingede let, samt afrundingsfejl ved indlæsning af data.
+                  Hookes lov bruges i praksis bl.a. i bilaffjedringer, præcisionsvægte og
+                  stødabsorbere.
                 </p>
               </div>
             )}

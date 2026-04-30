@@ -78,7 +78,7 @@ Setting `labGuide: true` on a `Lab` entry replaces the simulation and observatio
 - **Semi-guidet** — brief overview + collapsible hint boxes
 - **Åben undersøgelse** — just the tools, no prompting
 
-The guide flows through four phases: Forberedelse (simulation + prediction) → Mål (data entry table with auto-calculated F = mg) → Analysér (Chart.js scatter plot with least-squares best-fit line, student k input, comparison against simulation k) → Konklusion (free-text + facit reveal).
+The guide flows through five phases: Planlæg (hypothesis + variable identification) → Opstil (simulation initialisation + setup checklist) → Mål (data entry table with auto-calculated F = mg) → Analysér (Chart.js scatter plot with least-squares best-fit line, student k input, comparison against simulation k) → Konkludér (guided reflection questions + facit reveal).
 
 Key files:
 - [src/components/HookesLovLabGuide.tsx](src/components/HookesLovLabGuide.tsx) — main guide component (mode picker, all phases, state)
@@ -86,9 +86,27 @@ Key files:
 
 The chart uses a `Scatter` component with `showLine: true` on the best-fit dataset (avoids mixed-type generic conflicts in Chart.js TypeScript). The regression is least-squares through origin: `k = Σ(xi·Fi) / Σ(xi²)`.
 
+### Lab guide design standard (6-phase template)
+
+All new lab guides should follow the **6-phase reusable template** documented in [docs/lab-guide-design-principles.md](docs/lab-guide-design-principles.md). This is the standard for every new lab — simulated and physical.
+
+The 6 phases:
+1. **Planlæg** — hypothesis formation, variable identification, prediction
+2. **Opstil** — apparatus setup and measurement strategy (brief for simulations, critical for physical labs)
+3. **Mål** — structured data collection with auto-calculated fields and validation
+4. **Analysér** — chart analysis, key parameter estimation, comparison to theory
+5. **Konkludér** — reflection, synthesis, model answer reveal
+6. **Reportér** — formal lab report (optional; omit unless required)
+
+Each phase adapts to three scaffolding modes: **Guidet** (heavy), **Semi-guidet** (hints), **Åben undersøgelse** (tools only).
+
+When designing a new lab guide, use the `/design-lab` skill to generate a filled-out phase scaffold.
+
 ## Current status
 - Hooke's Law lab page complete with p5 simulation
-- Full three-phase physical lab guide implemented (guided / semi-guided / open inquiry)
+- Full five-phase lab guide implemented following the 6-phase template standard (Planlæg, Opstil, Mål, Analysér, Konkludér)
+- Guided: hypothesis formation, variable identification, setup checklist, 4 reflection questions
+- Semi-guided: hints at each phase; Open: tools only
 - Data entry table with auto-calculated forces, live Chart.js graph, k comparison panel
 
 ## Known issues
