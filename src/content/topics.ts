@@ -56,6 +56,7 @@ export const topics: Topic[] = [
           "Læg mærke til, om grafen begynder at krumme ved store belastninger. Det er signal om, at fjederen er ved at blive trukket ud over sit elastiske område.",
         ],
         simulationId: "hookes-lov",
+        inquiry: true,
       },
       {
         slug: "newtons-2-lov",
