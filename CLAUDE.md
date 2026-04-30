@@ -22,7 +22,7 @@ A preview launch config is committed at `.claude/launch.json` (named `next-dev`)
 
 The entire content tree (topics → labs → theory/observations) lives in [src/content/topics.ts](src/content/topics.ts), typed by [src/content/types.ts](src/content/types.ts). To add a lab, add an entry under the right `Topic.labs[]`; to add a topic, add a new `Topic` to the array. Pages are statically generated from this data — there is no CMS.
 
-Each `Lab` has optional `goal`, `keyConcepts`, `keyEquation`, `theory`, `observations`, `simulationId`. The lab page conditionally renders sections per field, so a stub lab (just `slug`/`title`/`shortDescription`) renders an "Under udarbejdelse" placeholder.
+Each `Lab` has optional `goal`, `keyConcepts`, `keyEquation`, `theory`, `observations`, `simulationId`, `labGuide`. The lab page conditionally renders sections per field, so a stub lab (just `slug`/`title`/`shortDescription`) renders an "Under udarbejdelse" placeholder.
 
 ### Routing
 
@@ -69,3 +69,27 @@ Tailwind v4 (CSS-first, configured via PostCSS — no `tailwind.config.ts`). Top
 ### Lab page rendering
 
 [src/app/emner/\[topic\]/\[lab\]/page.tsx](src/app/emner/[topic]/[lab]/page.tsx) is the single template that renders every lab. New optional fields on `Lab` should be added to `types.ts` and rendered conditionally here, following the existing pattern (`{lab.x ? <section>…</section> : null}`). Equation rendering uses an in-file `renderEquation` helper that italicizes single-letter tokens — no KaTeX/MathJax dependency.
+
+### Lab guide system
+
+Setting `labGuide: true` on a `Lab` entry replaces the simulation and observations sections with a full interactive physical lab guide (`<HookesLovLabGuide>`). The guide has three inquiry modes chosen by the student at runtime:
+
+- **Guidet** — full step-by-step instructions at every phase
+- **Semi-guidet** — brief overview + collapsible hint boxes
+- **Åben undersøgelse** — just the tools, no prompting
+
+The guide flows through four phases: Forberedelse (simulation + prediction) → Mål (data entry table with auto-calculated F = mg) → Analysér (Chart.js scatter plot with least-squares best-fit line, student k input, comparison against simulation k) → Konklusion (free-text + facit reveal).
+
+Key files:
+- [src/components/HookesLovLabGuide.tsx](src/components/HookesLovLabGuide.tsx) — main guide component (mode picker, all phases, state)
+- [src/components/ForceExtensionChart.tsx](src/components/ForceExtensionChart.tsx) — Chart.js scatter + regression line; uses `chart.js` v4 + `react-chartjs-2` v5
+
+The chart uses a `Scatter` component with `showLine: true` on the best-fit dataset (avoids mixed-type generic conflicts in Chart.js TypeScript). The regression is least-squares through origin: `k = Σ(xi·Fi) / Σ(xi²)`.
+
+## Current status
+- Hooke's Law lab page complete with p5 simulation
+- Full three-phase physical lab guide implemented (guided / semi-guided / open inquiry)
+- Data entry table with auto-calculated forces, live Chart.js graph, k comparison panel
+
+## Known issues
+- None

@@ -67,11 +67,11 @@ const sketch: Sketch<SpringProps> = (p5) => {
 
     // natural-length reference line
     const naturalY = SPRING_TOP + NATURAL_PX;
-    p5.drawingContext.setLineDash([4, 4]);
+    (p5.drawingContext as CanvasRenderingContext2D).setLineDash([4, 4]);
     p5.stroke(148, 163, 184);
     p5.strokeWeight(1);
     p5.line(ANCHOR_X - 110, naturalY, ANCHOR_X + 110, naturalY);
-    p5.drawingContext.setLineDash([]);
+    (p5.drawingContext as CanvasRenderingContext2D).setLineDash([]);
     p5.noStroke();
     p5.fill(100, 116, 139);
     p5.textSize(11);

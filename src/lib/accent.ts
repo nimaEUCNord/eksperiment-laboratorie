@@ -1,6 +1,6 @@
 import type { AccentColor } from "@/content/types";
 
-type AccentClasses = {
+export type AccentClasses = {
   bg: string;
   bgSoft: string;
   text: string;

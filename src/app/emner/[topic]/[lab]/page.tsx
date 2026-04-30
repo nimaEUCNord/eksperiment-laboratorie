@@ -6,6 +6,7 @@ import { HookesLovInquiry } from "@/components/HookesLovInquiry";
 import { getAccent } from "@/lib/accent";
 import { getAllTopics, getLab } from "@/lib/content";
 import type { Lab } from "@/content/types";
+import HookesLovLabGuide from "@/components/HookesLovLabGuide";
 
 type Params = { topic: string; lab: string };
 
@@ -40,6 +41,7 @@ export default async function LabPage({
   const { topic, lab } = found;
   const accent = getAccent(topic.accentColor);
   const isFleshedOut = hasFullContent(lab);
+  const showLabGuide = Boolean(lab.labGuide);
 
   const breadcrumb = (
     <div className="pt-10 sm:pt-12">
@@ -117,16 +119,18 @@ export default async function LabPage({
         </section>
       ) : null}
 
-      <section className="mt-10">
-        <h2 className="text-xl font-semibold text-slate-900">Simulation</h2>
-        <p className="mt-2 text-sm text-slate-600">
-          Træk i skyderne og se, hvordan banen ændrer sig. Animationen starter
-          forfra, hver gang du justerer en parameter.
-        </p>
-        <div className="mt-4">
-          <Simulation simulationId={lab.simulationId} />
-        </div>
-      </section>
+      {!showLabGuide && (
+        <section className="mt-10">
+          <h2 className="text-xl font-semibold text-slate-900">Simulation</h2>
+          <p className="mt-2 text-sm text-slate-600">
+            Træk i skyderne og se, hvordan banen ændrer sig. Animationen starter
+            forfra, hver gang du justerer en parameter.
+          </p>
+          <div className="mt-4">
+            <Simulation simulationId={lab.simulationId} />
+          </div>
+        </section>
+      )}
 
       {lab.theory && lab.theory.length > 0 ? (
         <section className="mt-10">
@@ -139,7 +143,7 @@ export default async function LabPage({
         </section>
       ) : null}
 
-      {lab.observations && lab.observations.length > 0 ? (
+      {!showLabGuide && lab.observations && lab.observations.length > 0 ? (
         <section className="mt-10">
           <h2 className="text-xl font-semibold text-slate-900">I laboratoriet</h2>
           <p className="mt-2 text-sm text-slate-600">
@@ -161,6 +165,12 @@ export default async function LabPage({
           </ol>
         </section>
       ) : null}
+
+      {showLabGuide && (
+        <section className="mt-10">
+          <HookesLovLabGuide accent={accent} />
+        </section>
+      )}
 
       {!isFleshedOut ? (
         <section className="mt-12 rounded-xl border border-slate-200 bg-slate-50 p-6 text-slate-700">

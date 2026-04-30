@@ -9,6 +9,7 @@ export type Lab = {
   observations?: string[];
   simulationId?: string;
   inquiry?: boolean;
+  labGuide?: boolean;
 };
 
 export type AccentColor =
