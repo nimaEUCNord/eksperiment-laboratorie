@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { Simulation } from "@/components/Simulation";
+import { HookesLovInquiry } from "@/components/HookesLovInquiry";
 import { getAccent } from "@/lib/accent";
 import { getAllTopics, getLab } from "@/lib/content";
 import type { Lab } from "@/content/types";
@@ -40,26 +41,44 @@ export default async function LabPage({
   const accent = getAccent(topic.accentColor);
   const isFleshedOut = hasFullContent(lab);
 
+  const breadcrumb = (
+    <div className="pt-10 sm:pt-12">
+      <Link
+        href={`/emner/${topic.slug}`}
+        className={`inline-flex items-center gap-1 text-sm ${accent.text} hover:underline`}
+      >
+        ← {topic.title}
+      </Link>
+    </div>
+  );
+
+  const header = (
+    <header className="mt-4">
+      <span className={`text-xs font-semibold uppercase tracking-wider ${accent.textSoft}`}>
+        Forsøg
+      </span>
+      <h1 className="mt-2 text-4xl font-semibold text-slate-900 sm:text-5xl">
+        {lab.title}
+      </h1>
+      <p className="mt-3 text-lg text-slate-600">{lab.shortDescription}</p>
+    </header>
+  );
+
+  if (lab.inquiry) {
+    return (
+      <div className="mx-auto max-w-5xl px-4 sm:px-6">
+        {breadcrumb}
+        {header}
+        <HookesLovInquiry accent={accent} />
+        <div className="pb-16" />
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-4xl px-4 sm:px-6">
-      <div className="pt-10 sm:pt-12">
-        <Link
-          href={`/emner/${topic.slug}`}
-          className={`inline-flex items-center gap-1 text-sm ${accent.text} hover:underline`}
-        >
-          ← {topic.title}
-        </Link>
-      </div>
-
-      <header className="mt-4">
-        <span className={`text-xs font-semibold uppercase tracking-wider ${accent.textSoft}`}>
-          Forsøg
-        </span>
-        <h1 className="mt-2 text-4xl font-semibold text-slate-900 sm:text-5xl">
-          {lab.title}
-        </h1>
-        <p className="mt-3 text-lg text-slate-600">{lab.shortDescription}</p>
-      </header>
+      {breadcrumb}
+      {header}
 
       {lab.goal ? (
         <section className="mt-10">

@@ -8,6 +8,7 @@ export type Lab = {
   theory?: string[];
   observations?: string[];
   simulationId?: string;
+  inquiry?: boolean;
 };
 
 export type AccentColor =
