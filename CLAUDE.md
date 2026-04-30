@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Eksperiment Laboratorie — a Danish-language Next.js site of physics labs for HTX Fysik A. Each "lab" pairs theory with an interactive p5.js simulation that students explore via sliders. All UI copy is in Danish; keep new content in Danish unless asked otherwise.
+Eksperiment Laboratorie — a Danish-language Next.js site of physics labs for HTX Fysik B and A. Each lab features a real experiment tightly coupled to interactive p5.js simulations. All UI copy is in Danish; keep new content in Danish unless asked otherwise.
 
 ## Commands
 
@@ -101,13 +101,3 @@ The 6 phases:
 Each phase adapts to three scaffolding modes: **Guidet** (heavy), **Semi-guidet** (hints), **Åben undersøgelse** (tools only).
 
 When designing a new lab guide, use the `/design-lab` skill to generate a filled-out phase scaffold.
-
-## Current status
-- Hooke's Law lab page complete with p5 simulation
-- Full five-phase lab guide implemented following the 6-phase template standard (Planlæg, Opstil, Mål, Analysér, Konkludér)
-- Guided: hypothesis formation, variable identification, setup checklist, 4 reflection questions
-- Semi-guided: hints at each phase; Open: tools only
-- Data entry table with auto-calculated forces, live Chart.js graph, k comparison panel
-
-## Known issues
-- None
