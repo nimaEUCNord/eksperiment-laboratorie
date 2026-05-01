@@ -271,4 +271,63 @@ export const topics: Topic[] = [
       },
     ],
   },
+  {
+    slug: "test-template",
+    title: "Test og Template",
+    tagline: "Template til nye forsøg",
+    description:
+      "Dette er et testforsøg, der viser alle sektioner og den nye generiske 6-fase laboratorieguide. Brug det som skabelon når du designer nye guidede forsøg.",
+    accentColor: "sky",
+    labs: [
+      {
+        slug: "template-forsog",
+        title: "Template forsøg",
+        shortDescription: "Viser alle sektion og 6-fase struktur med generisk guide",
+        goal: "Forstå hvordan man strukturerer et guidet laboratorieforsøg med hypotesefrembringelse, variabelidentifikation, dataindsamling, analyse og konklusion.",
+        keyConcepts: [
+          "Hypotesefrembringelse og forudsigelse",
+          "Uafhængige, afhængige og kontrolvariable",
+          "Systematisk dataindsamling",
+          "Dataanalyse og fejlvurdering",
+          "Konklusion og syntese",
+        ],
+        keyEquation: "k = Σ(x·F) / Σ(x²)",
+        theory: [
+          "En grundlæggende del af naturvidenskab er at opstille hypoteser og teste dem systematisk gennem eksperimenter. I denne guide går vi gennem en struktureret proces: først formulerer vi en hypotese, dernæst planlægger vi forsøget og identificerer vores variable. Så indsamler vi data metodisk, analyserer resultaterne og drager slutninger.",
+          "Den generiske 6-fase guide demonstrerer hvordan man kan skabe genanvendelig struktur for forsøg på tværs af forskellige faglige domæner. Hver fase med sine tre guidelsesmuligheder (Guidet, Semi-guidet, Åben undersøgelse) tilpasser sig både erfarne og mindre erfarne elever.",
+        ],
+        observations: [
+          "Formuler din hypotese klart: hvad forventer du at observere?",
+          "Identificer dine variable – hvilken ændrer du, hvad måler du, hvad holder du konstant?",
+          "Indsaml mindst 4-6 datapunkter for at sikre pålidelig analyse.",
+          "Beregn nøgletal ud fra dine data (f.eks. hældning eller konstant).",
+          "Sammenlign dine resultater med teorien og diskuter fejlkilder.",
+        ],
+        labGuide: true,
+        labGuideConfig: {
+          type: "generic",
+          hypothesis: "Den afhængige variabel har en lineær sammenhæng med den uafhængige variabel.",
+          variables: [
+            { name: "Uafhængig variabel", type: "independent", unit: "enheder" },
+            { name: "Afhængig variabel", type: "dependent", unit: "enheder" },
+            { name: "Kontrolvariabel", type: "control", unit: "konstant" },
+          ],
+          measurementFields: [
+            { label: "Måling 1", unit: "enheder", autoCalculate: false },
+            { label: "Måling 2", unit: "enheder", autoCalculate: false },
+            { label: "Beregnet værdi", unit: "enheder", autoCalculate: true, formula: "m1 * m2" },
+          ],
+          theoreticalValue: 25,
+          deviationThreshold: 10,
+          reflectionQuestions: [
+            "1. Stemmer dine resultater overens med hypotesen? Beskriv hvilke mønstre du observerede.",
+            "2. Beregn eller aflæs nøgleparametren ud fra dine data. Hvordan sammenligner det med den teoretiske værdi?",
+            "3. Hvilke mulige fejlkilder kunne påvirke dit forsøg? Hvordan ville de ændre resultaterne?",
+            "4. Hvis du skulle gentage forsøget, hvad ville du gøre anderledes for at forbedre præcisionen?",
+          ],
+          facit: "En velgennemført analyse sammenligner systematisk observerede data med teoretiske forudsigelser, og vurderer pålidelighed gennem fejlkildeanalyse.",
+        },
+      },
+    ],
+  },
 ];

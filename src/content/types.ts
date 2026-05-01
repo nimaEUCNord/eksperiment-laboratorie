@@ -1,3 +1,27 @@
+export type Variable = {
+  name: string;
+  type: "independent" | "dependent" | "control" | "derived";
+  unit?: string;
+};
+
+export type MeasurementField = {
+  label: string;
+  unit: string;
+  autoCalculate: boolean;
+  formula?: string;
+};
+
+export type LabGuideConfig = {
+  type: "generic" | "custom";
+  hypothesis?: string;
+  variables?: Variable[];
+  measurementFields?: MeasurementField[];
+  theoreticalValue?: number;
+  deviationThreshold?: number;
+  reflectionQuestions?: string[];
+  facit?: string;
+};
+
 export type Lab = {
   slug: string;
   title: string;
@@ -10,6 +34,7 @@ export type Lab = {
   simulationId?: string;
   inquiry?: boolean;
   labGuide?: boolean;
+  labGuideConfig?: LabGuideConfig;
 };
 
 export type AccentColor =
