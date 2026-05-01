@@ -30,6 +30,12 @@ const PHASES = [
 ] as const;
 
 const SETUP_ITEMS = [
+  "Jeg har målt fjederens naturlige længde uden belastning (nulpunkt)",
+  "Jeg har samlet de materialer, jeg skal bruge: kendt masse, lineal/målebånd, statif",
+  "Jeg er klar til at mål forlængelsen ved mindst 5-6 forskellige masser",
+];
+
+const SETUP_ITEMS_SIM = [
   "Simulationen er nulstillet (forlængelse = 0 mm ved ingen masse)",
   "Jeg har valgt mindst 6 masseværdier jævnt fordelt over arbejdsområdet",
   "Jeg er klar til at aflæse forlængelsen, når systemet er i ro (ikke svinger)",
@@ -37,20 +43,20 @@ const SETUP_ITEMS = [
 
 const CONCLUSION_QUESTIONS = [
   {
-    q: "1. Beskriv den sammenhæng, du fandt mellem forlængelse og kraft. Stemmer den overens med Hookes lov (F = k · x)?",
-    ph: "Beskriv den lineære sammenhæng du observerede…",
+    q: "1. Beskriv den sammenhæng, du fandt mellem forlængelse og kraft i dine rigtige målinger. Stemmer den overens med Hookes lov (F = k · x)?",
+    ph: "I min rigtige fjeder observerede jeg at… fordi…",
   },
   {
-    q: "2. Hvad målte du som fjederkonstant k? Stemmer det med simulationens værdi på 5,0 N/m? Hvad kan forklare en eventuel forskel?",
-    ph: "Min k var… og afveg med… fordi…",
+    q: "2. Hvad målte du som fjederkonstant k for din rigtige fjeder? Hvordan sammenligner det med simulationens ideelle værdi på 5,0 N/m?",
+    ph: "Min målte k var… N/m. Simulationen viste 5,0 N/m. Afvigelsen kan skyldes…",
   },
   {
-    q: "3. Nævn to mulige fejlkilder i dette forsøg. Hvordan ville de påvirke din måling af k?",
-    ph: "Fejlkilde 1:… Fejlkilde 2:…",
+    q: "3. Nævn mindst to mulige fejlkilder i dit rigtige forsøg. Hvordan ville de påvirke din måling af k?",
+    ph: "Fejlkilde 1: …påvirker k ved at…\nFejlkilde 2: …påvirker k ved at…",
   },
   {
-    q: "4. Giv et eksempel fra hverdagen, hvor Hookes lov er vigtig.",
-    ph: "F.eks. i bilaffjedringer, præcisionsvægte, stødabsorbere…",
+    q: "4. Giv et eksempel fra hverdagen, hvor Hookes lov og fjederkonstanten k er vigtig.",
+    ph: "F.eks. i bilaffjedringer (stiv k for stabil køreposition), præcisionsvægte (kendt k for nøjagtighed) eller…",
   },
 ];
 
@@ -71,6 +77,7 @@ export default function HookesLovLabGuide({ accent }: Props) {
 
   // Phase 3 state
   const [rows, setRows] = useState<Row[]>(() => Array.from({ length: 6 }, EMPTY_ROW));
+  const [showSimComparison, setShowSimComparison] = useState(false);
 
   // Phase 4 state
   const [studentK, setStudentK] = useState("");
@@ -229,10 +236,18 @@ export default function HookesLovLabGuide({ accent }: Props) {
               <p className="italic text-slate-600">
                 Hvordan afhænger en fjedres forlængelse af den påhængte masse?
               </p>
+              <p className="font-medium text-slate-800 mt-3">Dit forsøgssetup:</p>
+              <p className="text-slate-600">
+                Du skal måle forlængelse på en <strong>rigtig fjeder</strong> ved at hænge kendte masser på den.
+              </p>
               <p className="font-medium text-slate-800 mt-3">Fremgangsmåde:</p>
               <ol className="mt-1 list-decimal list-inside space-y-1.5">
-                <li>Kig på simulationen herunder og træk i masseglidseren.</li>
-                <li>Observer hvad der sker med forlængelsen, når du fordobler massen.</li>
+                <li>
+                  Før du begynder at måle, skal du forudsige: hvad tror du sker med forlængelsen, når du fordobler massen?
+                </li>
+                <li>
+                  Kig på simulationen herunder for at få intuition — men husk at din rigtige fjeder kan opføre sig anderledes!
+                </li>
                 <li>Skriv din hypotese ved hjælp af sætningsstarteren nedenfor.</li>
                 <li>Identificér dine variable inden du fortsætter.</li>
               </ol>
@@ -350,24 +365,29 @@ export default function HookesLovLabGuide({ accent }: Props) {
 
           {mode === "guidet" && (
             <div
-              className={`rounded-xl border ${accent.border} ${accent.bgSoft} p-4 text-sm text-slate-700 space-y-2`}
+              className={`rounded-xl border ${accent.border} ${accent.bgSoft} p-4 text-sm text-slate-700 space-y-4`}
             >
-              <p className="font-medium text-slate-800">Klargør simulationen:</p>
-              <ol className="mt-1 list-decimal list-inside space-y-1.5">
-                <li>Start simulationen herunder og bekræft, at fjederen vises korrekt.</li>
-                <li>
-                  Sæt massen til 0 for at nulstille forlængelsen til 0 mm — det er dit nulpunkt.
-                </li>
-                <li>
-                  Notér at simulationen viser forlængelsen direkte i mm – du behøver ikke
-                  konvertere.
-                </li>
-                <li>
-                  Beslut dig for dine masseværdier: brug mindst 6 forskellige værdier fra ~50 g
-                  til ~500 g.
-                </li>
-              </ol>
-              <p className="font-medium text-slate-800 mt-3">Tjekliste:</p>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <p className="font-medium text-slate-800 mb-2">📋 Dit rigtige forsøg:</p>
+                  <ol className="list-decimal list-inside space-y-1.5 text-xs">
+                    <li>Mål fjederens naturlige længde uden belastning — dette er dit nulpunkt.</li>
+                    <li>Sæt fjederen op på en statif eller fast ophængning.</li>
+                    <li>Hav en lineal eller målebånd klar ved siden af fjederen.</li>
+                    <li>Forbered de masser, du skal bruge (mindst 5-6 forskellige værdier).</li>
+                  </ol>
+                </div>
+                <div>
+                  <p className="font-medium text-slate-800 mb-2">🖥️ Simulation til sammenligning:</p>
+                  <ol className="list-decimal list-inside space-y-1.5 text-xs">
+                    <li>Nulstil simulationen — sæt massen til 0 g.</li>
+                    <li>Bekræft at forlængelsen viser 0 mm ved no load.</li>
+                    <li>Notér dig hvordan grafen ser ud i simulationen.</li>
+                    <li>Du sammenligner senere denne ideelle kurve med dine rigtige målinger.</li>
+                  </ol>
+                </div>
+              </div>
+              <p className="font-medium text-slate-800 mt-3">Tjekliste før du starter målingerne:</p>
               <div className="mt-1 space-y-2">
                 {SETUP_ITEMS.map((item, i) => (
                   <label key={i} className="flex items-start gap-2 cursor-pointer select-none">
@@ -403,7 +423,13 @@ export default function HookesLovLabGuide({ accent }: Props) {
 
           <HookesLovSim />
 
-          <div className="flex justify-end">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => setPhase(1)}
+              className="text-sm text-slate-500 hover:underline"
+            >
+              ← Tilbage
+            </button>
             <button
               onClick={() => setPhase(3)}
               className={`rounded-xl px-6 py-2.5 text-sm font-medium text-white ${accent.bg}`}
@@ -421,26 +447,20 @@ export default function HookesLovLabGuide({ accent }: Props) {
             <h3 className="text-lg font-semibold text-slate-900">Fase 3 — Mål</h3>
             {mode === "guidet" && (
               <div
-                className={`mt-3 rounded-xl border ${accent.border} ${accent.bgSoft} p-4 text-sm text-slate-700`}
+                className={`mt-3 rounded-xl border ${accent.border} ${accent.bgSoft} p-4 text-sm text-slate-700 space-y-3`}
               >
-                <p className="font-medium text-slate-800">Fremgangsmåde:</p>
-                <ol className="mt-2 list-decimal list-inside space-y-1.5">
-                  <li>Vælg en startmasse (f.eks. 50 g). Indstil den i simulationen.</li>
+                <p className="font-medium text-slate-800">📊 Mål på din rigtige fjeder:</p>
+                <ol className="list-decimal list-inside space-y-1.5">
+                  <li>Vælg din første masse (f.eks. 50 g) og hæng den på fjederen.</li>
+                  <li>Vent til fjederen er helt stabil (ikke svinger længere).</li>
+                  <li>Aflæs forlængelsen i mm (husk nulpunktet!) og notér den i tabellen.</li>
+                  <li>Fjern massen og tilføj næste masse. Gentag trin 2-3.</li>
                   <li>
-                    Vent til fjæderen er i ro. Aflæs forlængelsen i mm og indtast begge værdier i
-                    tabellen.
+                    Tag mindst 5-6 målepunkter fordelt bredt — fra små masser til større, men
+                    ikke så tunge at fjederen deformeres!
                   </li>
-                  <li>Øg massen med ca. 50–100 g ad gangen. Gentag trin 2.</li>
-                  <li>
-                    Forsøg at dække et bredt interval — brug mindst 6 masseværdier fra ca. 50 g
-                    til 500 g.
-                  </li>
-                  <li>
-                    Kolonnen "Kraft F (N)" beregnes automatisk. Kontrollér, at værdierne ser
-                    rimelige ud.
-                  </li>
-                  <li>Du skal have mindst 4 gyldige datapunkter for at fortsætte.</li>
                 </ol>
+                <p className="font-medium text-slate-800 mt-2">Kraften F = m · g beregnes automatisk.</p>
               </div>
             )}
             {mode === "semi" && (
@@ -466,13 +486,30 @@ export default function HookesLovLabGuide({ accent }: Props) {
 
           <HookesLovSim />
 
+          {mode === "guidet" && (
+            <div className="mb-4 flex items-center gap-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={showSimComparison}
+                  onChange={(e) => setShowSimComparison(e.target.checked)}
+                  className="rounded"
+                />
+                <span className="text-sm text-slate-700">Vis simulationens værdier til sammenligning</span>
+              </label>
+            </div>
+          )}
+
           <div className="overflow-x-auto rounded-xl border border-slate-200">
             <table className="w-full text-sm">
               <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
                 <tr>
                   <th className="px-4 py-3 text-left">Masse (g)</th>
-                  <th className="px-4 py-3 text-left">Forlængelse (mm)</th>
+                  <th className="px-4 py-3 text-left">Din måling: Forlængelse (mm)</th>
                   <th className="px-4 py-3 text-right">Kraft F (N)</th>
+                  {showSimComparison && mode === "guidet" && (
+                    <th className="px-4 py-3 text-left text-slate-400">Sim: Forlængelse (mm)</th>
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -480,6 +517,7 @@ export default function HookesLovLabGuide({ accent }: Props) {
                   const m = parseFloat(row.massG);
                   const f =
                     Number.isFinite(m) && m > 0 ? ((m / 1000) * 9.82).toFixed(4) : null;
+                  const simX = m > 0 ? ((m / 1000) * 9.82) / SIM_K : 0;
                   return (
                     <tr key={i} className="bg-white">
                       <td className="px-3 py-2">
@@ -511,6 +549,11 @@ export default function HookesLovLabGuide({ accent }: Props) {
                           <span className="text-slate-300">—</span>
                         )}
                       </td>
+                      {showSimComparison && mode === "guidet" && (
+                        <td className="px-4 py-2 text-left font-mono text-slate-400">
+                          {m > 0 ? (simX * 1000).toFixed(1) : "—"} mm
+                        </td>
+                      )}
                     </tr>
                   );
                 })}
@@ -526,6 +569,12 @@ export default function HookesLovLabGuide({ accent }: Props) {
           </button>
 
           <div className="flex items-center justify-between">
+            <button
+              onClick={() => setPhase(2)}
+              className="text-sm text-slate-500 hover:underline"
+            >
+              ← Tilbage
+            </button>
             <span className="text-sm text-slate-500">
               {canProceedToPhase4
                 ? `${validRows.length} gyldige målepunkter`
@@ -549,28 +598,32 @@ export default function HookesLovLabGuide({ accent }: Props) {
             <h3 className="text-lg font-semibold text-slate-900">Fase 4 — Analysér</h3>
             {mode === "guidet" && (
               <div
-                className={`mt-3 rounded-xl border ${accent.border} ${accent.bgSoft} p-4 text-sm text-slate-700 space-y-1`}
+                className={`mt-3 rounded-xl border ${accent.border} ${accent.bgSoft} p-4 text-sm text-slate-700 space-y-3`}
               >
                 <p className="font-medium text-slate-800">
-                  Sådan aflæser du fjederkonstanten:
+                  📈 Analyse af dine rigtige målinger:
                 </p>
-                <ol className="mt-2 list-decimal list-inside space-y-1.5">
+                <ol className="list-decimal list-inside space-y-1.5">
                   <li>
-                    Grafen viser dine målinger (punkter) og en bedste rette linje beregnet fra
-                    dem.
+                    Grafen viser <strong>dine målinger</strong> (punkter) og en bedste rette linje
+                    beregnet fra dem.
                   </li>
                   <li>
                     Hookes lov siger F = k·x, så{" "}
-                    <strong>hældningen af linjen er fjederkonstanten k</strong>.
+                    <strong>hældningen af linjen er din fjederkonstant k</strong>.
                   </li>
                   <li>
-                    Vælg to punkter på linjen (ikke dine datapunkter) og beregn: k = ΔF / Δx.
+                    Vælg to punkter på den røde linje (ikke dine datapunkter) og beregn: k = ΔF /
+                    Δx.
                   </li>
                   <li>
-                    Indtast din aflæste k nedenfor og se, hvor tæt du er på simulationens
-                    referencenværdi.
+                    Indtast din aflæste k nedenfor. Hvordan sammenligner den med simulationens
+                    ideelle værdi på 5,0 N/m?
                   </li>
                 </ol>
+                <p className="text-xs text-slate-600 italic mt-2">
+                  Husk: Din rigtige fjeder kan have andre egenskaber end simulationen — det er helt normalt!
+                </p>
               </div>
             )}
             {mode === "semi" && (
@@ -660,7 +713,13 @@ export default function HookesLovLabGuide({ accent }: Props) {
             </div>
           )}
 
-          <div className="flex justify-end">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => setPhase(3)}
+              className="text-sm text-slate-500 hover:underline"
+            >
+              ← Tilbage
+            </button>
             <button
               onClick={() => setPhase(5)}
               className={`rounded-xl px-6 py-2.5 text-sm font-medium text-white ${accent.bg}`}
@@ -752,21 +811,45 @@ export default function HookesLovLabGuide({ accent }: Props) {
               <div
                 className={`rounded-xl border ${accent.border} ${accent.bgSoft} p-4 text-sm text-slate-700 space-y-2`}
               >
-                <p className="font-semibold text-slate-800">Forventet konklusion:</p>
+                <p className="font-semibold text-slate-800">✓ Forventet konklusion:</p>
                 <p>
-                  Vi fandt, at forlængelsen af fjæderen er direkte proportional med den påhængte
-                  kraft, i overensstemmelse med Hookes lov F = k · x. Grafen viste en ret linje
-                  gennem origo, og hældningen gav fjederkonstanten k ≈ 5 N/m, hvilket stemmer
-                  godt med simulationens referencenværdi.
+                  I vores rigtige forsøg fandt vi, at forlængelsen af fjæderen var direkte
+                  proportional med den påhængte kraft — og dermed at Hookes lov F = k · x
+                  gælder for vores fjeder. Grafen over vores målinger viste en næsten ret linje,
+                  og hældningen gav vores fjederkonstant k.
                 </p>
                 <p>
-                  En eventuel afvigelse skyldes primært, at forlængelsen blev aflæst mens
-                  fjæderen stadig svingede let, samt afrundingsfejl ved indlæsning af data.
-                  Hookes lov bruges i praksis bl.a. i bilaffjedringer, præcisionsvægte og
-                  stødabsorbere.
+                  Vores målte k var sandsynligt forskellig fra simulationens ideelle værdi på
+                  5,0 N/m. Det skyldes blandt andet at vores rigtige fjeder har små
+                  uregelmæssigheder, vi aflæste aflængelsen mens fjederen svingede lidt, og der
+                  er variation i vores målinger. Simulationen er en idealiseret model — den
+                  virkelige verden er mere kompleks!
+                </p>
+                <p>
+                  Hookes lov er vigtig i praksis i bl.a. bilaffjedringer (hvor man vælger en
+                  bestemt k for at få den ønskede køreegenskab), præcisionsvægte (hvor k må være
+                  kendt for nøjagtig vejning) og mange andre tekniske anvendelser.
                 </p>
               </div>
             )}
+          </div>
+
+          <div className="flex items-center justify-between mt-6">
+            <button
+              onClick={() => setPhase(4)}
+              className="text-sm text-slate-500 hover:underline"
+            >
+              ← Tilbage
+            </button>
+            <button
+              onClick={() => {
+                setMode(null);
+                setPhase("choose");
+              }}
+              className={`rounded-xl px-6 py-2.5 text-sm font-medium text-white ${accent.bg}`}
+            >
+              Færdig
+            </button>
           </div>
         </div>
       )}
