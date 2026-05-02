@@ -15,6 +15,7 @@ Eksperiment Laboratorie — a Danish-language Next.js site of physics labs for H
 - `npm run dev` — start the Next.js dev server (default port 3000)
 - `npm run build` / `npm start` — production build + serve
 - `npm run lint` — `next lint`
+- `TODOS.md` — development ideas and features to implement later
 
 There is no test runner configured.
 
