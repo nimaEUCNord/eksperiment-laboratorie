@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Image from "next/image";
 import type { Lab, LabGuideConfig } from "@/content/types";
 import type { AccentClasses } from "@/lib/accent";
 import HintBox from "./HintBox";
@@ -41,7 +42,9 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
   const [validatedFields, setValidatedFields] = useState<Record<string, Set<'fysiskStorrelse' | 'symbol' | 'enhed'>>>({});
 
   // Phase 2 state
-  const [setupChecked, setSetupChecked] = useState<boolean[]>([]);
+  const [materialsChecked, setMaterialsChecked] = useState<boolean[]>([]);
+  const [setupChecked, setSetupChecked] = useState<boolean[]>([false, false, false, false, false]);
+  const [hoveredMaterialIdx, setHoveredMaterialIdx] = useState<number | null>(null);
 
   // Phase 3 state (data collection)
   const [rows, setRows] = useState<Row[]>(() =>
@@ -180,6 +183,14 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
+    });
+  };
+
+  const toggleMaterial = (i: number) => {
+    setMaterialsChecked((prev) => {
+      const updated = [...prev];
+      updated[i] = !updated[i];
+      return updated;
     });
   };
 
@@ -502,9 +513,62 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
             </div>
           )}
 
+          {mode === "guidet" && config.materials && (
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-slate-700">Materialer:</p>
+              <div className="flex gap-6">
+                <div className="flex-1">
+                  <ul className="space-y-2 text-sm text-slate-600">
+                    {config.materials.map((material, i) => (
+                      <li
+                        key={i}
+                        className="flex items-start gap-3"
+                        onMouseEnter={() => setHoveredMaterialIdx(i)}
+                        onMouseLeave={() => setHoveredMaterialIdx(null)}
+                      >
+                        <input
+                          type="checkbox"
+                          id={`material-${i}`}
+                          checked={materialsChecked[i] || false}
+                          onChange={() => toggleMaterial(i)}
+                          className="mt-0.5 h-4 w-4 rounded-lg"
+                        />
+                        <label
+                          htmlFor={`material-${i}`}
+                          className="cursor-pointer hover:text-slate-900 transition-colors"
+                        >
+                          {material}
+                        </label>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="flex-1 h-64 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 p-6 flex flex-col items-center justify-center">
+                  {hoveredMaterialIdx !== null && config.materials && config.materialImages && config.materials[hoveredMaterialIdx] && config.materialImages[config.materials[hoveredMaterialIdx]] ? (
+                    <div className="text-center flex flex-col items-center justify-center flex-1">
+                      <Image
+                        src={config.materialImages[config.materials[hoveredMaterialIdx]] as any}
+                        alt={config.materials[hoveredMaterialIdx]}
+                        className="max-h-48 max-w-full object-contain"
+                        width={300}
+                        height={300}
+                        priority
+                      />
+                      <p className="mt-3 text-xs font-medium text-slate-600">
+                        {config.materials[hoveredMaterialIdx]}
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-xs font-medium text-slate-500">Skitse af forsøgsopstilling</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="space-y-3">
             <p className="text-sm font-medium text-slate-700">Tjekliste:</p>
-            {["Jeg har saml alle materialer", "Jeg har verificeret at udstyr virker", "Jeg er klar til at starte måling"].map((item, i) => (
+            {["Jeg har fundet alle materialer frem", "Jeg har opstillet mit forsøg, som vist på skitsen", "Jeg har sikret mig, at udstyret virker", "Jeg ved, hvordan jeg måler de variable jeg har planlagt", "Jeg har taget et billede af forsøgsopstillingen"].map((item, i) => (
               <div key={i} className="flex items-center">
                 <input
                   type="checkbox"

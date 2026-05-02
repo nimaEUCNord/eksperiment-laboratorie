@@ -27,6 +27,8 @@ export type LabGuideConfig = {
   facit?: string;
   validateVariableInputs?: boolean;
   blockOnWrongVariableInputs?: boolean;
+  materials?: string[];
+  materialImages?: Record<string, unknown>;
 };
 
 export type Lab = {

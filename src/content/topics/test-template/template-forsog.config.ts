@@ -1,11 +1,18 @@
 import type { LabGuideConfig } from "@/content/types";
+import linealImg from "@/assets/images/equipment/template-forsog/lineal.webp";
+import digitalvaegImg from "@/assets/images/equipment/template-forsog/digitalvaegt.webp";
+import newtonmeterImg from "@/assets/images/equipment/template-forsog/newtonmeter.webp";
+import slidslodderImg from "@/assets/images/equipment/template-forsog/slidslodder10x10g.webp";
+import stativfodImg from "@/assets/images/equipment/template-forsog/stativfod.webp";
+import stativstangImg from "@/assets/images/equipment/template-forsog/Stativstang.webp";
+import stativmuffeImg from "@/assets/images/equipment/template-forsog/stativmuffe.webp";
 
 export const templateForsoegConfig: LabGuideConfig = {
   type: "generic",
   hypothesis: "Det forventes, at tyngdekraften er ligefrem proportional med massen og at hældningstallet er lig med tyngdeaccelerationen $g=9,82 m/s^2",
   hypothesisPlaceholder: "Det forventes, at ... og at hældningstallet bliver ...",
   validateVariableInputs: true,
-  blockOnWrongVariableInputs: true,
+  blockOnWrongVariableInputs: false,
   variables: [
     {
       name: "Uafhængig variabel",
@@ -46,4 +53,22 @@ export const templateForsoegConfig: LabGuideConfig = {
     "4. Hvis du skulle gentage forsøget, hvad ville du gøre anderledes for at forbedre præcisionen?",
   ],
   facit: "En velgennemført analyse sammenligner systematisk observerede data med teoretiske forudsigelser, og vurderer pålidelighed gennem fejlkildeanalyse.",
+  materials: [
+    "Lineal",
+    "Digitalvægt, 0.1 g",
+    "Dynamometer, 2 N",
+    "Lodholder med slidslodder 10 x 10 g",
+    "Stativfod",
+    "Stativstang",
+    "Stativmuffe",
+  ],
+  materialImages: {
+    "Lineal": linealImg,
+    "Digitalvægt, 0.1 g": digitalvaegImg,
+    "Dynamometer, 2 N": newtonmeterImg,
+    "Lodholder med slidslodder 10 x 10 g": slidslodderImg,
+    "Stativfod": stativfodImg,
+    "Stativstang": stativstangImg,
+    "Stativmuffe": stativmuffeImg,
+  },
 };
