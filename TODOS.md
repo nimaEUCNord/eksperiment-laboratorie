@@ -3,7 +3,7 @@
 Last updated: 2026-05-02
 
 ## 🎯 Features (Next)
-- [ ] 
+- [ ] Make sketch for forsøgsopstilling for template-forsøg — Create diagram/illustration of experiment setup to display in Phase 2 sketch area 
 
 ## 💡 Ideas (Backlog)
 - 

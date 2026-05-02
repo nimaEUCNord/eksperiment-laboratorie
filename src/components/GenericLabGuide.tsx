@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import type { Lab, LabGuideConfig } from "@/content/types";
 import type { AccentClasses } from "@/lib/accent";
 import HintBox from "./HintBox";
+import { useLabGuidePersistence } from "@/hooks/useLabGuidePersistence";
 
 type Mode = "guidet" | "semi" | "open";
 type Phase = "choose" | 1 | 2 | 3 | 4 | 5;
@@ -31,6 +32,12 @@ interface GenericLabGuideProps {
 }
 
 export default function GenericLabGuide({ lab, config, accent }: GenericLabGuideProps) {
+  const persistence = useLabGuidePersistence(lab.slug);
+  const [showRestoreNotification, setShowRestoreNotification] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [hasRestored, setHasRestored] = useState(false);
+
+  // Initialize state with restoration from localStorage on mount
   const [mode, setMode] = useState<Mode | null>(null);
   const [phase, setPhase] = useState<Phase>("choose");
 
@@ -64,6 +71,50 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
 
   // Shared
   const [openHints, setOpenHints] = useState<Set<string>>(new Set());
+
+  // Restore from localStorage on mount
+  useEffect(() => {
+    if (hasRestored) return;
+    const restored = persistence.restoreState();
+    if (restored) {
+      if (restored.mode) setMode(restored.mode);
+      if (restored.hypothesis) setHypothesis(restored.hypothesis);
+      if (restored.varInputs) setVarInputs(restored.varInputs);
+      if (restored.validationErrors) setValidationErrors(restored.validationErrors);
+      if (restored.validatedFields) {
+        const validatedFieldsMap: Record<string, Set<'fysiskStorrelse' | 'symbol' | 'enhed'>> = {};
+        Object.entries(restored.validatedFields).forEach(([key, value]) => {
+          validatedFieldsMap[key] = new Set(value as any);
+        });
+        setValidatedFields(validatedFieldsMap);
+      }
+      if (restored.materialsChecked) setMaterialsChecked(restored.materialsChecked);
+      if (restored.setupChecked) setSetupChecked(restored.setupChecked);
+      if (restored.rows) setRows(restored.rows);
+      if (restored.studentValue) setStudentValue(restored.studentValue);
+      if (restored.reflections) setReflections(restored.reflections);
+      setShowRestoreNotification(true);
+      setPhase(1);
+    }
+    setHasRestored(true);
+  }, [hasRestored, persistence]);
+
+  // Auto-save state whenever it changes
+  useEffect(() => {
+    if (!hasRestored || phase === "choose") return;
+    persistence.saveState({
+      hypothesis,
+      varInputs,
+      validationErrors,
+      validatedFields,
+      materialsChecked,
+      setupChecked,
+      rows,
+      studentValue,
+      reflections,
+      mode: mode || 'guidet',
+    });
+  }, [hasRestored, hypothesis, varInputs, validationErrors, validatedFields, materialsChecked, setupChecked, rows, studentValue, reflections, mode, phase, persistence]);
 
   const phaseIndex = (p: Phase) => (p === "choose" ? -1 : (p as number) - 1);
 
@@ -202,6 +253,24 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
     setReflections((prev) => prev.map((v, idx) => (idx === i ? value : v)));
   };
 
+  const handleClearWork = () => {
+    persistence.clearState();
+    setHypothesis("");
+    setVarInputs({});
+    setValidationErrors({});
+    setValidatedFields({});
+    setMaterialsChecked([]);
+    setSetupChecked([false, false, false, false, false]);
+    setRows(Array.from({ length: 6 }, () =>
+      (config.measurementFields || []).reduce((acc, field) => ({ ...acc, [field.label]: "" }), {})
+    ));
+    setStudentValue("");
+    setReflections(Array.from({ length: config.reflectionQuestions?.length || 0 }, () => ""));
+    setShowFacit(false);
+    setPhase(1);
+    setShowClearConfirm(false);
+  };
+
   // Mode selection screen
   if (phase === "choose") {
     return (
@@ -252,6 +321,18 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
   return (
     <div>
       <h2 className="text-xl font-semibold text-slate-900">Laboratorieguide</h2>
+
+      {showRestoreNotification && (
+        <div className="mt-4 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-800 flex items-center justify-between">
+          <span>✓ Dit tidligere arbejde er gendannet</span>
+          <button
+            onClick={() => setShowRestoreNotification(false)}
+            className="text-green-600 hover:text-green-700"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* Progress bar */}
       <div className="mt-4 flex items-center gap-0">
@@ -481,6 +562,15 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
               Næste fase →
             </button>
           </div>
+
+          <div className="mt-6 border-t border-slate-200 pt-4">
+            <button
+              onClick={() => setShowClearConfirm(true)}
+              className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
+            >
+              Nulstil arbejde
+            </button>
+          </div>
         </div>
       )}
 
@@ -595,6 +685,15 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
               Næste fase →
             </button>
           </div>
+
+          <div className="mt-6 border-t border-slate-200 pt-4">
+            <button
+              onClick={() => setShowClearConfirm(true)}
+              className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
+            >
+              Nulstil arbejde
+            </button>
+          </div>
         </div>
       )}
 
@@ -689,6 +788,15 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
               Næste fase →
             </button>
           </div>
+
+          <div className="mt-6 border-t border-slate-200 pt-4">
+            <button
+              onClick={() => setShowClearConfirm(true)}
+              className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
+            >
+              Nulstil arbejde
+            </button>
+          </div>
         </div>
       )}
 
@@ -742,6 +850,15 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
               className={`rounded-xl px-6 py-2.5 text-sm font-medium text-white ${accent.bg}`}
             >
               Næste fase →
+            </button>
+          </div>
+
+          <div className="mt-6 border-t border-slate-200 pt-4">
+            <button
+              onClick={() => setShowClearConfirm(true)}
+              className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
+            >
+              Nulstil arbejde
             </button>
           </div>
         </div>
@@ -799,6 +916,41 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
             >
               Afslut guide
             </button>
+          </div>
+
+          <div className="mt-6 border-t border-slate-200 pt-4">
+            <button
+              onClick={() => setShowClearConfirm(true)}
+              className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
+            >
+              Nulstil arbejde
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Clear Work Confirmation Dialog */}
+      {showClearConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-lg max-w-sm mx-4 p-6">
+            <h3 className="text-lg font-semibold text-slate-900">Nulstil arbejde?</h3>
+            <p className="mt-2 text-sm text-slate-600">
+              Er du sikker på, at du vil slette alt dit arbejde? Dette kan ikke fortrydes.
+            </p>
+            <div className="mt-6 flex gap-3 justify-end">
+              <button
+                onClick={() => setShowClearConfirm(false)}
+                className="rounded-xl px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+              >
+                Annuller
+              </button>
+              <button
+                onClick={handleClearWork}
+                className="rounded-xl px-4 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600"
+              >
+                Nulstil
+              </button>
+            </div>
           </div>
         </div>
       )}

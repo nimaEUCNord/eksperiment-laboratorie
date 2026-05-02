@@ -21,6 +21,11 @@ There is no test runner configured.
 
 A preview launch config is committed at `.claude/launch.json` (named `next-dev`); use it with the preview tooling instead of running `next dev` via Bash.
 
+## Available skills
+
+- `/design-lab` — Design a new physics lab guide following the 6-phase template; generates a complete LabGuideConfig scaffold
+- Memory consolidation — Use `/anthropic-skills:consolidate-memory` to audit and tidy memory files (durable context across sessions)
+
 ## Architecture
 
 ### Content model
@@ -101,19 +106,30 @@ Tailwind v4 (CSS-first, configured via PostCSS — no `tailwind.config.ts`). Top
 
 ### Lab guide system
 
-Setting `labGuide: true` on a `Lab` entry replaces the simulation and observations sections with a full interactive physical lab guide (`<HookesLovLabGuide>`). The guide has three inquiry modes chosen by the student at runtime:
+Setting `labGuide: true` on a `Lab` entry replaces the simulation and observations sections with an interactive lab guide. The guide has three inquiry modes chosen by the student at runtime:
 
 - **Guidet** — full step-by-step instructions at every phase
 - **Semi-guidet** — brief overview + collapsible hint boxes
 - **Åben undersøgelse** — just the tools, no prompting
 
-The guide flows through five phases: Planlæg (hypothesis + variable identification) → Opstil (simulation initialisation + setup checklist) → Mål (data entry table with auto-calculated F = mg) → Analysér (Chart.js scatter plot with least-squares best-fit line, student k input, comparison against simulation k) → Konkludér (guided reflection questions + facit reveal).
+**Recommended approach (2026-05-02):** Use the reusable `GenericLabGuide` component via a `LabGuideConfig`. This replaces the earlier lab-specific `HookesLovLabGuide` approach.
+
+The guide flows through five phases: Planlæg (hypothesis + variable identification) → Opstil (apparatus setup + setup checklist) → Mål (data entry table with auto-calculated fields) → Analysér (Chart.js scatter plot with least-squares best-fit line, student value input, comparison against theory) → Konkludér (guided reflection questions + facit reveal).
 
 Key files:
-- [src/components/HookesLovLabGuide.tsx](src/components/HookesLovLabGuide.tsx) — main guide component (mode picker, all phases, state)
+- [src/components/GenericLabGuide.tsx](src/components/GenericLabGuide.tsx) — reusable lab guide component (all 5 phases, 3 modes, state, validation, **persistence**)
+- [src/components/HookesLovLabGuide.tsx](src/components/HookesLovLabGuide.tsx) — legacy lab-specific guide (to be refactored to use GenericLabGuide)
 - [src/components/ForceExtensionChart.tsx](src/components/ForceExtensionChart.tsx) — Chart.js scatter + regression line; uses `chart.js` v4 + `react-chartjs-2` v5
 
 The chart uses a `Scatter` component with `showLine: true` on the best-fit dataset (avoids mixed-type generic conflicts in Chart.js TypeScript). The regression is least-squares through origin: `k = Σ(xi·Fi) / Σ(xi²)`.
+
+#### Data persistence (2026-05-02)
+
+GenericLabGuide automatically persists student work to browser localStorage. On page refresh, students see their data restored with a notification. Each lab stores data independently via `lab-guide:${labSlug}` keys. Students can intentionally clear all work via a "Nulstil arbejde" button with confirmation dialog.
+
+**What persists:** hypothesis, variable inputs, measurements, analysis values, reflections, and scaffolding mode choice. **What doesn't:** current phase (resets to 1), expanded hints, facit visibility.
+
+See `src/hooks/useLabGuidePersistence.ts` and `.claude/memory/feature_persistence.md` for implementation details.
 
 ### Lab guide design standard (6-phase template)
 
@@ -129,4 +145,17 @@ The 6 phases:
 
 Each phase adapts to three scaffolding modes: **Guidet** (heavy), **Semi-guidet** (hints), **Åben undersøgelse** (tools only).
 
-When designing a new lab guide, use the `/design-lab` skill to generate a filled-out phase scaffold.
+#### How to add a new lab with GenericLabGuide
+
+1. Create a `[lab-slug].ts` file in the appropriate topic folder with `labGuide: true`
+2. Create a `[lab-slug].config.ts` exporting `LabGuideConfig`:
+   - `hypothesis`: expected relationship (e.g., "F = mg")
+   - `variables`: array of `Variable` with type (independent/dependent/control/derived), units, and expected answers
+   - `measurementFields`: table columns with auto-calculate flags
+   - `theoreticalValue` / `deviationThreshold`: for % comparison in Analysér
+   - `reflectionQuestions`: prompts for Konkludér
+   - `facit`: model answer (revealed on demand)
+   - Validation flags: `validateVariableInputs`, `blockOnWrongVariableInputs`
+3. See `src/content/topics/test-template/template-forsog.config.ts` for a complete example
+
+When designing a new lab guide, use the `/design-lab` skill to generate a filled-out phase scaffold. See `.claude/memory/project_generic_lab_guide.md` for full API documentation.
