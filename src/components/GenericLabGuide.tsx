@@ -103,7 +103,7 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
               {
                 key: "guidet" as Mode,
                 title: "Guidet",
-                desc: "Trin-for-trin vejledning og instruktioner ved hvert fase.",
+                desc: "Trin-for-trin vejledning og instruktioner ved hver fase.",
               },
               {
                 key: "semi" as Mode,
@@ -176,39 +176,47 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
         <div className="mt-8 space-y-6">
           <h3 className="text-lg font-semibold text-slate-900">Fase 1 — Planlæg</h3>
 
-          {mode === "guidet" && (
-            <div
-              className={`rounded-xl border ${accent.border} ${accent.bgSoft} space-y-2 p-4 text-sm text-slate-700`}
-            >
-              <p className="font-medium text-slate-800">Hypotese:</p>
-              <p className="italic text-slate-600">{config.hypothesis}</p>
-              {config.variables && config.variables.length > 0 && (
-                <>
-                  <p className="font-medium text-slate-800 mt-3">Variable:</p>
-                  <ul className="list-inside list-disc space-y-1.5 text-slate-600">
-                    {config.variables.map((v) => (
-                      <li key={v.name}>
-                        <strong>{v.type}</strong>: {v.name} {v.unit ? `(${v.unit})` : ""}
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              )}
-            </div>
+          {mode === "semi" && (
+            <div className="mt-3 space-y-3 text-sm text-slate-600" />
           )}
 
-          {mode === "semi" && (
-            <div className="mt-3 space-y-1 text-sm text-slate-600">
-              <p>Formulér en hypotese og identificér dine variable.</p>
-              {config.variables && (
-                <HintBox
-                  id="p1-h1"
-                  label="Hvilke variable har du?"
-                  content={`Uafhængig (ændres): ${config.variables.find((v) => v.type === "independent")?.name || "?"}, Afhængig (måles): ${config.variables.find((v) => v.type === "dependent")?.name || "?"}`}
-                  openHints={openHints}
-                  toggle={toggleHint}
-                />
-              )}
+          {mode !== "open" && config.variables && (
+            <div className="space-y-3">
+              <p className="text-sm font-medium text-slate-700">Identificér dine variable:</p>
+              <div className="grid gap-4 sm:grid-cols-3">
+                {config.variables.map((v) => {
+                  const typeLabel = {
+                    independent: "Uafhængig variabel",
+                    dependent: "Afhængig variabel",
+                    control: "Konstanter",
+                    derived: "Beregnet værdi",
+                  }[v.type] || v.type;
+
+                  const typeHelpText = {
+                    independent: "Det du ændrer",
+                    dependent: "Det du måler",
+                    control: "Det der holder samme",
+                    derived: "Beregnet fra andre variable",
+                  }[v.type] || "";
+
+                  return (
+                    <div key={v.name}>
+                      <label className="block text-xs font-medium text-slate-600">
+                        {typeLabel}
+                        {typeHelpText && <span className="font-normal text-slate-500"> — {typeHelpText}</span>}
+                      </label>
+                      <input
+                        type="text"
+                        value={varInputs[v.name] || ""}
+                        onChange={(e) => setVarInputs((prev) => ({ ...prev, [v.name]: e.target.value }))}
+                        placeholder={v.name}
+                        className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                      />
+                      {v.description && <p className="mt-1.5 text-xs text-slate-500">{v.description}</p>}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
 
@@ -224,37 +232,6 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
               className="mt-2 w-full rounded-xl border border-slate-200 p-3 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400"
             />
           </div>
-
-          {mode !== "open" && config.variables && (
-            <div className="space-y-3">
-              <p className="text-sm font-medium text-slate-700">Identificér dine variable:</p>
-              <div className="grid gap-3 sm:grid-cols-3">
-                {config.variables.map((v) => {
-                  const typeLabel = {
-                    independent: "Uafhængig variabel",
-                    dependent: "Afhængig variabel",
-                    control: "Konstanter",
-                    derived: "Beregnet værdi",
-                  }[v.type] || v.type;
-
-                  return (
-                    <div key={v.name}>
-                      <label className="block text-xs font-medium text-slate-600">
-                        {typeLabel}
-                      </label>
-                      <input
-                        type="text"
-                        value={varInputs[v.name] || ""}
-                        onChange={(e) => setVarInputs((prev) => ({ ...prev, [v.name]: e.target.value }))}
-                        placeholder={v.name}
-                        className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400"
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
 
           <div className="flex items-center justify-between">
             <button
