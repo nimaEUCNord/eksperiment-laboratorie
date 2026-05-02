@@ -18,6 +18,7 @@ export type MeasurementField = {
 export type LabGuideConfig = {
   type: "generic" | "custom";
   hypothesis?: string;
+  hypothesisPlaceholder?: string;
   variables?: Variable[];
   measurementFields?: MeasurementField[];
   theoreticalValue?: number;

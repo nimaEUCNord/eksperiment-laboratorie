@@ -3,6 +3,7 @@ import type { LabGuideConfig } from "@/content/types";
 export const templateForsoegConfig: LabGuideConfig = {
   type: "generic",
   hypothesis: "Det forventes, at tyngdekraften er ligefrem proportional med massen og at hældningstallet er lig med tyngdeaccelerationen $g=9,82 m/s^2",
+  hypothesisPlaceholder: "Det forventes, at ... og at hældningstallet bliver ...",
   validateVariableInputs: true,
   blockOnWrongVariableInputs: true,
   variables: [
@@ -10,17 +11,17 @@ export const templateForsoegConfig: LabGuideConfig = {
       name: "Uafhængig variabel",
       type: "independent",
       unit: "enhed",
-      expectedPhysicalQuantity: ["Kraft", "Tyngdekraft"],
-      expectedSymbol: ["F", "F_t"],
-      expectedUnit: ["N", "newton", "Newton"],
+      expectedPhysicalQuantity: "Masse",
+      expectedSymbol: "m",
+      expectedUnit: ["kg", "g", "kilogram", "gram"],
     },
     {
       name: "Afhængig variabel",
       type: "dependent",
       unit: "enhed",
-      expectedPhysicalQuantity: "Masse",
-      expectedSymbol: "m",
-      expectedUnit: ["kg", "g", "kilogram", "gram"],
+      expectedPhysicalQuantity: ["Kraft", "Tyngdekraft"],
+      expectedSymbol: ["F", "F_t"],
+      expectedUnit: ["N", "newton", "Newton"],
     },
     {
       name: "Kontrolvariabel",

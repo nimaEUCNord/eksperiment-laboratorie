@@ -339,7 +339,9 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
                                 <>
                                   <span className="text-sm text-red-500">✗</span>
                                   {mode === "guidet" && (
-                                    <span className="text-xs text-red-500">Forventet: {v.expectedPhysicalQuantity}</span>
+                                    <span className="text-xs text-red-500">
+                                      Forventet: {Array.isArray(v.expectedPhysicalQuantity) ? v.expectedPhysicalQuantity.join(" eller ") : v.expectedPhysicalQuantity}
+                                    </span>
                                   )}
                                 </>
                               ) : (
@@ -440,7 +442,7 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
               value={hypothesis}
               onChange={(e) => setHypothesis(e.target.value)}
               rows={3}
-              placeholder="Skriv din hypotese her…"
+              placeholder={config.hypothesisPlaceholder || "Skriv din hypotese her…"}
               className="mt-2 w-full rounded-xl border border-slate-200 p-3 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400"
             />
           </div>
