@@ -6,6 +6,8 @@ import type { AccentClasses } from "@/lib/accent";
 import { Simulation } from "./Simulation";
 import HookesLovLabGuide from "./HookesLovLabGuide";
 import GenericLabGuide from "./GenericLabGuide";
+import { Equation } from "./Equation";
+import { RichText } from "./RichText";
 
 interface LabPageContentProps {
   lab: Lab;
@@ -37,7 +39,9 @@ export default function LabPageContent({ lab, accent }: LabPageContentProps) {
           {lab.goal ? (
             <section className="mt-8">
               <h2 className="text-xl font-semibold text-slate-900">Formål</h2>
-              <p className="mt-2 text-slate-700">{lab.goal}</p>
+              <p className="mt-2 text-slate-700">
+                <RichText text={lab.goal} />
+              </p>
             </section>
           ) : null}
 
@@ -62,10 +66,10 @@ export default function LabPageContent({ lab, accent }: LabPageContentProps) {
             <section className="mt-8">
               <h2 className="text-xl font-semibold text-slate-900">Nøgleligning</h2>
               <div
-                className={`mt-3 flex items-center justify-center rounded-2xl border ${accent.border} ${accent.bgSoft} px-6 py-8`}
+                className={`mt-3 flex items-center justify-center rounded-2xl border ${accent.border} ${accent.bgSoft} px-6 py-0`}
               >
-                <span className="font-serif text-4xl tracking-wide text-slate-900 sm:text-5xl">
-                  {renderEquation(lab.keyEquation)}
+                <span className="text-3xl sm:text-2xl">
+                  <Equation latex={lab.keyEquation} mode="display" />
                 </span>
               </div>
             </section>
@@ -76,7 +80,9 @@ export default function LabPageContent({ lab, accent }: LabPageContentProps) {
               <h2 className="text-xl font-semibold text-slate-900">Teori</h2>
               <div className="mt-3 space-y-4 text-slate-700">
                 {lab.theory.map((paragraph, i) => (
-                  <p key={i}>{paragraph}</p>
+                  <p key={i}>
+                    <RichText text={paragraph} />
+                  </p>
                 ))}
               </div>
             </section>
@@ -136,16 +142,3 @@ export default function LabPageContent({ lab, accent }: LabPageContentProps) {
   );
 }
 
-function renderEquation(eq: string) {
-  return eq.split(/(\s+)/).map((token, i) => {
-    if (/^\s+$/.test(token)) return token;
-    if (/^[A-Za-z]$/.test(token)) {
-      return (
-        <span key={i} className="italic">
-          {token}
-        </span>
-      );
-    }
-    return token;
-  });
-}

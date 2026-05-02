@@ -8,6 +8,12 @@ import HintBox from "./HintBox";
 type Mode = "guidet" | "semi" | "open";
 type Phase = "choose" | 1 | 2 | 3 | 4 | 5;
 type Row = Record<string, string>;
+type VariableInput = {
+  fysiskStorrelse: string;
+  symbol: string;
+  enhed: string;
+};
+type ValidationErrors = Record<string, Record<string, boolean>>;
 
 const PHASES = [
   { key: 1, label: "Planlæg" },
@@ -29,7 +35,10 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
 
   // Phase 1 state
   const [hypothesis, setHypothesis] = useState("");
-  const [varInputs, setVarInputs] = useState<Record<string, string>>({});
+  const [varInputs, setVarInputs] = useState<Record<string, VariableInput>>({});
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
+  // Tracks which specific fields have been validated (to avoid showing feedback on untouched fields)
+  const [validatedFields, setValidatedFields] = useState<Record<string, Set<'fysiskStorrelse' | 'symbol' | 'enhed'>>>({});
 
   // Phase 2 state
   const [setupChecked, setSetupChecked] = useState<boolean[]>([]);
@@ -54,6 +63,99 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
   const [openHints, setOpenHints] = useState<Set<string>>(new Set());
 
   const phaseIndex = (p: Phase) => (p === "choose" ? -1 : (p as number) - 1);
+
+  // Validation helper: check if student answer matches expected value(s)
+  const checkAnswer = (studentAnswer: string, expectedValue: string | string[] | undefined, isCaseSensitive: boolean): boolean => {
+    if (!expectedValue || studentAnswer.trim() === "") return false;
+
+    const normalize = isCaseSensitive ? (s: string) => s : (s: string) => s.toLowerCase();
+    const studentNorm = normalize(studentAnswer.trim());
+
+    if (Array.isArray(expectedValue)) {
+      return expectedValue.some((exp) => normalize(exp) === studentNorm);
+    }
+    return normalize(expectedValue) === studentNorm;
+  };
+
+  // Validate a single field on blur for instant feedback
+  const validateSingleField = (variableName: string, fieldType: 'fysiskStorrelse' | 'symbol' | 'enhed') => {
+    if (!config.validateVariableInputs || !config.variables) return;
+
+    const variable = config.variables.find((v) => v.name === variableName);
+    if (!variable) return;
+
+    const input = varInputs[variableName] || { fysiskStorrelse: "", symbol: "", enhed: "" };
+    const value = input[fieldType];
+
+    // Don't validate empty fields — remove feedback if the field was cleared
+    if (value.trim() === "") {
+      setValidatedFields((prev) => {
+        const next = new Set(prev[variableName] ?? []);
+        next.delete(fieldType);
+        return { ...prev, [variableName]: next };
+      });
+      return;
+    }
+
+    let isError = false;
+    if (fieldType === 'fysiskStorrelse') {
+      isError = !checkAnswer(value, variable.expectedPhysicalQuantity, false);
+    } else if (fieldType === 'symbol') {
+      isError = !checkAnswer(value, variable.expectedSymbol, true);
+    } else if (fieldType === 'enhed') {
+      isError = !checkAnswer(value, variable.expectedUnit, true);
+    }
+
+    setValidationErrors((prev) => ({
+      ...prev,
+      [variableName]: {
+        ...(prev[variableName] || { fysiskStorrelse: false, symbol: false, enhed: false }),
+        [fieldType]: isError,
+      },
+    }));
+    setValidatedFields((prev) => ({
+      ...prev,
+      [variableName]: new Set([...(prev[variableName] ?? []), fieldType]),
+    }));
+  };
+
+  // Validate all variable inputs (called on Next button)
+  const validateVariableInputs = (): boolean => {
+    if (!config.validateVariableInputs || !config.variables) return true;
+
+    const errors: ValidationErrors = {};
+    let hasErrors = false;
+
+    config.variables.forEach((variable) => {
+      const input = varInputs[variable.name] || { fysiskStorrelse: "", symbol: "", enhed: "" };
+      const varErrors: Record<string, boolean> = {
+        fysiskStorrelse: !checkAnswer(input.fysiskStorrelse, variable.expectedPhysicalQuantity, false),
+        symbol: !checkAnswer(input.symbol, variable.expectedSymbol, true),
+        enhed: !checkAnswer(input.enhed, variable.expectedUnit, true),
+      };
+
+      errors[variable.name] = varErrors;
+      if (Object.values(varErrors).some((err) => err)) {
+        hasErrors = true;
+      }
+    });
+
+    setValidationErrors(errors);
+    // Mark all fields as validated so Next-button validation shows all feedback
+    const allValidated: Record<string, Set<'fysiskStorrelse' | 'symbol' | 'enhed'>> = {};
+    config.variables.forEach((variable) => {
+      allValidated[variable.name] = new Set(['fysiskStorrelse', 'symbol', 'enhed']);
+    });
+    setValidatedFields(allValidated);
+    return !hasErrors;
+  };
+
+  // Validate on blur for instant feedback
+  const handleFieldBlur = (variableName: string, fieldType: 'fysiskStorrelse' | 'symbol' | 'enhed') => {
+    if (config.validateVariableInputs) {
+      validateSingleField(variableName, fieldType);
+    }
+  };
 
   const validRows = useMemo(() => {
     return rows.filter((row) => {
@@ -183,7 +285,7 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
           {mode !== "open" && config.variables && (
             <div className="space-y-3">
               <p className="text-sm font-medium text-slate-700">Identificér dine variable:</p>
-              <div className="grid gap-4 sm:grid-cols-3">
+              <div className="space-y-6">
                 {config.variables.map((v) => {
                   const typeLabel = {
                     independent: "Uafhængig variabel",
@@ -193,26 +295,136 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
                   }[v.type] || v.type;
 
                   const typeHelpText = {
-                    independent: "Det du ændrer",
-                    dependent: "Det du måler",
-                    control: "Det der holder samme",
-                    derived: "Beregnet fra andre variable",
+                    independent: "",
+                    dependent: "",
+                    control: "",
+                    derived: "",
                   }[v.type] || "";
 
+                  const varInput = varInputs[v.name] || { fysiskStorrelse: "", symbol: "", enhed: "" };
+                  const varError = validationErrors[v.name] || { fysiskStorrelse: false, symbol: false, enhed: false };
+
                   return (
-                    <div key={v.name}>
+                    <div key={v.name} className="rounded-lg border border-slate-200 bg-slate-50 p-4">
                       <label className="block text-xs font-medium text-slate-600">
                         {typeLabel}
                         {typeHelpText && <span className="font-normal text-slate-500"> — {typeHelpText}</span>}
                       </label>
-                      <input
-                        type="text"
-                        value={varInputs[v.name] || ""}
-                        onChange={(e) => setVarInputs((prev) => ({ ...prev, [v.name]: e.target.value }))}
-                        placeholder={v.name}
-                        className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400"
-                      />
-                      {v.description && <p className="mt-1.5 text-xs text-slate-500">{v.description}</p>}
+                      {v.description && <p className="mt-1 text-xs text-slate-500">{v.description}</p>}
+
+                      <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                        {/* Fysisk størrelse */}
+                        <div>
+                          <label className="block text-xs font-medium text-slate-700">Fysisk størrelse</label>
+                          <input
+                            type="text"
+                            value={varInput.fysiskStorrelse}
+                            onChange={(e) =>
+                              setVarInputs((prev) => ({
+                                ...prev,
+                                [v.name]: { ...varInput, fysiskStorrelse: e.target.value },
+                              }))
+                            }
+                            onBlur={() => handleFieldBlur(v.name, 'fysiskStorrelse')}
+                            placeholder="fx Kraft"
+                            className={`mt-1 w-full rounded-lg border px-2 py-1.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 ${
+                              varError.fysiskStorrelse
+                                ? "border-red-300 focus:ring-red-400"
+                                : "border-slate-200 focus:ring-sky-400"
+                            }`}
+                          />
+                          {validatedFields[v.name]?.has('fysiskStorrelse') && config.validateVariableInputs && v.expectedPhysicalQuantity && (
+                            <div className="mt-1 flex items-center gap-1">
+                              {varError.fysiskStorrelse ? (
+                                <>
+                                  <span className="text-sm text-red-500">✗</span>
+                                  {mode === "guidet" && (
+                                    <span className="text-xs text-red-500">Forventet: {v.expectedPhysicalQuantity}</span>
+                                  )}
+                                </>
+                              ) : (
+                                <span className="text-sm text-green-500">✓</span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Symbol */}
+                        <div>
+                          <label className="block text-xs font-medium text-slate-700">Symbol</label>
+                          <input
+                            type="text"
+                            value={varInput.symbol}
+                            onChange={(e) =>
+                              setVarInputs((prev) => ({
+                                ...prev,
+                                [v.name]: { ...varInput, symbol: e.target.value },
+                              }))
+                            }
+                            onBlur={() => handleFieldBlur(v.name, 'symbol')}
+                            placeholder="fx F"
+                            className={`mt-1 w-full rounded-lg border px-2 py-1.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 ${
+                              varError.symbol
+                                ? "border-red-300 focus:ring-red-400"
+                                : "border-slate-200 focus:ring-sky-400"
+                            }`}
+                          />
+                          {validatedFields[v.name]?.has('symbol') && config.validateVariableInputs && v.expectedSymbol && (
+                            <div className="mt-1 flex items-center gap-1">
+                              {varError.symbol ? (
+                                <>
+                                  <span className="text-sm text-red-500">✗</span>
+                                  {mode === "guidet" && (
+                                    <span className="text-xs text-red-500">
+                                      Forventet: {Array.isArray(v.expectedSymbol) ? v.expectedSymbol.join(" eller ") : v.expectedSymbol}
+                                    </span>
+                                  )}
+                                </>
+                              ) : (
+                                <span className="text-sm text-green-500">✓</span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Enhed */}
+                        <div>
+                          <label className="block text-xs font-medium text-slate-700">Enhed</label>
+                          <input
+                            type="text"
+                            value={varInput.enhed}
+                            onChange={(e) =>
+                              setVarInputs((prev) => ({
+                                ...prev,
+                                [v.name]: { ...varInput, enhed: e.target.value },
+                              }))
+                            }
+                            onBlur={() => handleFieldBlur(v.name, 'enhed')}
+                            placeholder="fx N"
+                            className={`mt-1 w-full rounded-lg border px-2 py-1.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 ${
+                              varError.enhed
+                                ? "border-red-300 focus:ring-red-400"
+                                : "border-slate-200 focus:ring-sky-400"
+                            }`}
+                          />
+                          {validatedFields[v.name]?.has('enhed') && config.validateVariableInputs && v.expectedUnit && (
+                            <div className="mt-1 flex items-center gap-1">
+                              {varError.enhed ? (
+                                <>
+                                  <span className="text-sm text-red-500">✗</span>
+                                  {mode === "guidet" && (
+                                    <span className="text-xs text-red-500">
+                                      Forventet: {Array.isArray(v.expectedUnit) ? v.expectedUnit.join(" eller ") : v.expectedUnit}
+                                    </span>
+                                  )}
+                                </>
+                              ) : (
+                                <span className="text-sm text-green-500">✓</span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   );
                 })}
@@ -238,14 +450,20 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
               onClick={() => {
                 setMode(null);
                 setPhase("choose");
+                setValidatedFields({});
               }}
               className="text-sm text-slate-500 hover:underline"
             >
               ← Skift undersøgelsesform
             </button>
             <button
-              onClick={() => setPhase(2)}
-              className={`rounded-xl px-6 py-2.5 text-sm font-medium text-white ${accent.bg}`}
+              onClick={() => {
+                const isValid = validateVariableInputs();
+                if (!isValid && config.blockOnWrongVariableInputs) return;
+                setPhase(2);
+              }}
+              disabled={config.validateVariableInputs && config.blockOnWrongVariableInputs && Object.keys(validationErrors).length > 0 && Object.values(validationErrors).some((e) => Object.values(e).some((v) => v))}
+              className={`rounded-xl px-6 py-2.5 text-sm font-medium text-white ${accent.bg} disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               Næste fase →
             </button>
@@ -332,11 +550,28 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
             <table className="w-full border-collapse text-sm">
               <thead>
                 <tr className={`${accent.bgSoft}`}>
-                  {config.measurementFields?.map((field) => (
-                    <th key={field.label} className="border border-slate-200 px-3 py-2 text-left font-medium text-slate-700">
-                      {field.label} ({field.unit})
-                    </th>
-                  ))}
+                  {config.measurementFields?.map((field, idx) => {
+                    // Try to use student-entered symbol and unit for measurement columns
+                    let headerLabel = field.label;
+                    let headerUnit = field.unit;
+
+                    if (config.variables && idx < config.variables.length) {
+                      const variable = config.variables[idx];
+                      const varInput = varInputs[variable.name];
+                      if (varInput?.symbol) {
+                        headerLabel = varInput.symbol;
+                        if (varInput.enhed) {
+                          headerUnit = varInput.enhed;
+                        }
+                      }
+                    }
+
+                    return (
+                      <th key={field.label} className="border border-slate-200 px-3 py-2 text-left font-medium text-slate-700">
+                        {headerLabel} ({headerUnit})
+                      </th>
+                    );
+                  })}
                 </tr>
               </thead>
               <tbody>

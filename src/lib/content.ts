@@ -1,4 +1,4 @@
-import { topics } from "@/content/topics";
+import { topics } from "@/content";
 import type { Lab, Topic } from "@/content/types";
 
 export function getAllTopics(): Topic[] {

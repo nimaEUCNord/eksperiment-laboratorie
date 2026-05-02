@@ -97,17 +97,3 @@ export default async function LabPage({
 function hasFullContent(lab: Lab): boolean {
   return Boolean(lab.goal && lab.keyConcepts && lab.keyConcepts.length > 0);
 }
-
-function renderEquation(eq: string) {
-  return eq.split(/(\s+)/).map((token, i) => {
-    if (/^\s+$/.test(token)) return token;
-    if (/^[A-Za-z]$/.test(token)) {
-      return (
-        <span key={i} className="italic">
-          {token}
-        </span>
-      );
-    }
-    return <span key={i}>{token}</span>;
-  });
-}

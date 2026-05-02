@@ -2,6 +2,10 @@ export type Variable = {
   name: string;
   type: "independent" | "dependent" | "control" | "derived";
   unit?: string;
+  description?: string;
+  expectedPhysicalQuantity?: string;
+  expectedSymbol?: string | string[];
+  expectedUnit?: string | string[];
 };
 
 export type MeasurementField = {
@@ -20,6 +24,8 @@ export type LabGuideConfig = {
   deviationThreshold?: number;
   reflectionQuestions?: string[];
   facit?: string;
+  validateVariableInputs?: boolean;
+  blockOnWrongVariableInputs?: boolean;
 };
 
 export type Lab = {

@@ -24,9 +24,33 @@ A preview launch config is committed at `.claude/launch.json` (named `next-dev`)
 
 ### Content model
 
-The entire content tree (topics → labs → theory/observations) lives in [src/content/topics.ts](src/content/topics.ts), typed by [src/content/types.ts](src/content/types.ts). To add a lab, add an entry under the right `Topic.labs[]`; to add a topic, add a new `Topic` to the array. Pages are statically generated from this data — there is no CMS.
+The content tree is organized hierarchically by topic. Each topic lives in its own directory under [src/content/topics/](src/content/topics/), with individual labs as separate files grouped by topic. All types are defined in [src/content/types.ts](src/content/types.ts); the assembly is in [src/content/index.ts](src/content/index.ts).
 
-Each `Lab` has optional `goal`, `keyConcepts`, `keyEquation`, `theory`, `observations`, `simulationId`, `labGuide`. The lab page conditionally renders sections per field, so a stub lab (just `slug`/`title`/`shortDescription`) renders an "Under udarbejdelse" placeholder.
+**File structure:**
+```
+src/content/
+├── index.ts                          (assembles topics, exports topics[])
+├── types.ts                          (Lab, Topic, LabGuideConfig types)
+└── topics/
+    ├── mekanik/
+    │   ├── index.ts                  (exports Topic + Lab[] for this topic)
+    │   ├── hookes-lov.ts             (Lab definition)
+    │   ├── skraat-kast.ts
+    │   └── ...
+    ├── energi/
+    ├── elektriske-kredsloeb/
+    ├── boelger/
+    ├── atomfysik/
+    ├── termodynamik/
+    └── test-template/
+        ├── index.ts
+        ├── template-forsog.ts        (Lab with labGuide: true)
+        └── template-forsog.config.ts (LabGuideConfig)
+```
+
+To add a lab, create a new file in the appropriate topic's directory (e.g., `src/content/topics/mekanik/my-lab.ts`) exporting a `Lab`. Each `Lab` has optional `goal`, `keyConcepts`, `keyEquation`, `theory`, `observations`, `simulationId`, `labGuide`, `labGuideConfig`. If `labGuide: true`, create a separate `[lab-slug].config.ts` file exporting the `LabGuideConfig`. Pages are statically generated from this data — there is no CMS.
+
+The lab page conditionally renders sections per field, so a stub lab (just `slug`/`title`/`shortDescription`) renders an "Under udarbejdelse" placeholder.
 
 ### Routing
 
