@@ -1,6 +1,6 @@
-import type { Lab } from "@/content/types";
+import type { LabConfig } from "@/content/types";
 
-export const newtons2Lov: Lab = {
+export const newtons2Lov: LabConfig = {
   slug: "newtons-2-lov",
   title: "Newtons 2. lov",
   shortDescription:

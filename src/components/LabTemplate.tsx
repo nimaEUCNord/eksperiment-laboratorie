@@ -1,8 +1,15 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import Image from "next/image";
+import type { LabConfig, LabGuide, PhaseId } from "@/content/types";
+import type { AccentClasses } from "@/lib/accent";
+import HintBox from "./HintBox";
+import { Equation } from "./Equation";
+import { Simulation } from "./Simulation";
+import MeasurementChart, { fitFromRows } from "./MeasurementChart";
+import { useLabGuidePersistence } from "@/hooks/useLabGuidePersistence";
 
-// Hide number input spinners and prevent scroll behavior
 const styles = `
   input[type="number"]::-webkit-outer-spin-button,
   input[type="number"]::-webkit-inner-spin-button {
@@ -13,12 +20,6 @@ const styles = `
     -moz-appearance: textfield;
   }
 `;
-import Image from "next/image";
-import type { Lab, LabGuideConfig } from "@/content/types";
-import type { AccentClasses } from "@/lib/accent";
-import HintBox from "./HintBox";
-import { Equation } from "./Equation";
-import { useLabGuidePersistence } from "@/hooks/useLabGuidePersistence";
 
 type Mode = "guidet" | "semi" | "open";
 type Phase = "choose" | 1 | 2 | 3 | 4 | 5;
@@ -31,70 +32,78 @@ type VariableInput = {
 type ValidationErrors = Record<string, Record<string, boolean>>;
 
 const PHASES = [
-  { key: 1, label: "Planlæg" },
-  { key: 2, label: "Opstil" },
-  { key: 3, label: "Mål" },
-  { key: 4, label: "Analysér" },
-  { key: 5, label: "Konkludér" },
+  { key: 1, label: "Planlæg", id: undefined },
+  { key: 2, label: "Opstil", id: "opstil" as PhaseId },
+  { key: 3, label: "Mål", id: "maal" as PhaseId },
+  { key: 4, label: "Analysér", id: "analyser" as PhaseId },
+  { key: 5, label: "Konkludér", id: undefined },
 ] as const;
 
-interface GenericLabGuideProps {
-  lab: Lab;
-  config: LabGuideConfig;
+const DEFAULT_SETUP_ITEMS = [
+  "Jeg har fundet alle materialer frem",
+  "Jeg har opstillet mit forsøg, som vist på skitsen",
+  "Jeg har sikret mig, at udstyret virker",
+  "Jeg ved, hvordan jeg måler de variable jeg har planlagt",
+  "Jeg har taget et billede af forsøgsopstillingen",
+];
+
+interface LabTemplateProps {
+  lab: LabConfig;
+  guide: LabGuide;
   accent: AccentClasses;
 }
 
-export default function GenericLabGuide({ lab, config, accent }: GenericLabGuideProps) {
+export default function LabTemplate({ lab, guide, accent }: LabTemplateProps) {
   const persistence = useLabGuidePersistence(lab.slug);
   const [showRestoreNotification, setShowRestoreNotification] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [hasRestored, setHasRestored] = useState(false);
 
-  // Initialize state with restoration from localStorage on mount
   const [mode, setMode] = useState<Mode | null>(null);
   const [phase, setPhase] = useState<Phase>("choose");
 
-  // Phase 1 state
+  const setupItems = guide.setupItems ?? DEFAULT_SETUP_ITEMS;
+  const embedSimIn = guide.embedSimulationInPhases ?? [];
+  const canEmbedSim = Boolean(lab.simulationId);
+
+  // Phase 1
   const [hypothesis, setHypothesis] = useState("");
   const [varInputs, setVarInputs] = useState<Record<string, VariableInput>>({});
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
-  // Tracks which specific fields have been validated (to avoid showing feedback on untouched fields)
   const [validatedFields, setValidatedFields] = useState<Record<string, Set<'fysiskStorrelse' | 'symbol' | 'enhed'>>>({});
 
-  // Phase 2 state
+  // Phase 2
   const [materialsChecked, setMaterialsChecked] = useState<boolean[]>(() =>
-    Array.from({ length: config.materials?.length || 0 }, () => false)
+    Array.from({ length: guide.materials?.length || 0 }, () => false),
   );
-  const [setupChecked, setSetupChecked] = useState<boolean[]>([false, false, false, false, false]);
+  const [setupChecked, setSetupChecked] = useState<boolean[]>(() =>
+    Array.from({ length: setupItems.length }, () => false),
+  );
   const [hoveredMaterialIdx, setHoveredMaterialIdx] = useState<number | null>(null);
 
-  // Phase 3 state (data collection)
+  // Phase 3
   const [rows, setRows] = useState<Row[]>(() =>
-    Array.from({ length: config.suggestedMeasurements || 6 }, () => {
-      const measVars = config.variables?.filter(v => v.type === "independent" || v.type === "dependent") || [];
+    Array.from({ length: guide.suggestedMeasurements || 6 }, () => {
+      const measVars = guide.variables?.filter(v => v.type === "independent" || v.type === "dependent") || [];
       return measVars.reduce((acc, v) => ({ ...acc, [v.name]: "" }), {});
-    })
+    }),
   );
-
-  // Phase 3 state (constants)
   const [constants, setConstants] = useState<Record<string, string>>(() => {
-    const controlVars = config.variables?.filter(v => v.type === "control") || [];
+    const controlVars = guide.variables?.filter(v => v.type === "control") || [];
     return controlVars.reduce((acc, v) => ({ ...acc, [v.name]: "" }), {});
   });
 
-  // Phase 4 state
+  // Phase 4
   const [studentValue, setStudentValue] = useState("");
 
-  // Phase 5 state
+  // Phase 5
   const [reflections, setReflections] = useState<string[]>(
-    Array.from({ length: config.reflectionQuestions?.length || 0 }, () => "")
+    Array.from({ length: guide.reflectionQuestions?.length || 0 }, () => ""),
   );
   const [showFacit, setShowFacit] = useState(false);
 
-  // Shared
   const [openHints, setOpenHints] = useState<Set<string>>(new Set());
 
-  // Restore from localStorage on mount
   useEffect(() => {
     if (hasRestored) return;
     const restored = persistence.restoreState();
@@ -106,7 +115,7 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
       if (restored.validatedFields) {
         const validatedFieldsMap: Record<string, Set<'fysiskStorrelse' | 'symbol' | 'enhed'>> = {};
         Object.entries(restored.validatedFields).forEach(([key, value]) => {
-          validatedFieldsMap[key] = new Set(value as any);
+          validatedFieldsMap[key] = new Set(value as Iterable<'fysiskStorrelse' | 'symbol' | 'enhed'>);
         });
         setValidatedFields(validatedFieldsMap);
       }
@@ -122,7 +131,6 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
     setHasRestored(true);
   }, [hasRestored, persistence]);
 
-  // Auto-save state whenever it changes
   useEffect(() => {
     if (!hasRestored || phase === "choose") return;
     persistence.saveState({
@@ -143,30 +151,23 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
   const phaseIndex = (p: Phase) => (p === "choose" ? -1 : (p as number) - 1);
   const isPhaseChoosing = (p: Phase): p is "choose" => p === "choose";
 
-  // Validation helper: check if student answer matches expected value(s)
   const checkAnswer = (studentAnswer: string, expectedValue: string | string[] | undefined, isCaseSensitive: boolean): boolean => {
     if (!expectedValue || studentAnswer.trim() === "") return false;
-
     const normalize = isCaseSensitive ? (s: string) => s : (s: string) => s.toLowerCase();
     const studentNorm = normalize(studentAnswer.trim());
-
     if (Array.isArray(expectedValue)) {
       return expectedValue.some((exp) => normalize(exp) === studentNorm);
     }
     return normalize(expectedValue) === studentNorm;
   };
 
-  // Validate a single field on blur for instant feedback
   const validateSingleField = (variableName: string, fieldType: 'fysiskStorrelse' | 'symbol' | 'enhed') => {
-    if (!config.validateVariableInputs || !config.variables) return;
-
-    const variable = config.variables.find((v) => v.name === variableName);
+    if (!guide.validateVariableInputs || !guide.variables) return;
+    const variable = guide.variables.find((v) => v.name === variableName);
     if (!variable) return;
-
     const input = varInputs[variableName] || { fysiskStorrelse: "", symbol: "", enhed: "" };
     const value = input[fieldType];
 
-    // Don't validate empty fields — remove feedback if the field was cleared
     if (value.trim() === "") {
       setValidatedFields((prev) => {
         const next = new Set(prev[variableName] ?? []);
@@ -198,47 +199,36 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
     }));
   };
 
-  // Validate all variable inputs (called on Next button)
-  const validateVariableInputs = (): boolean => {
-    if (!config.validateVariableInputs || !config.variables) return true;
-
+  const validateAllVariableInputs = (): boolean => {
+    if (!guide.validateVariableInputs || !guide.variables) return true;
     const errors: ValidationErrors = {};
     let hasErrors = false;
-
-    config.variables.forEach((variable) => {
+    guide.variables.forEach((variable) => {
       const input = varInputs[variable.name] || { fysiskStorrelse: "", symbol: "", enhed: "" };
       const varErrors: Record<string, boolean> = {
         fysiskStorrelse: !checkAnswer(input.fysiskStorrelse, variable.expectedPhysicalQuantity, false),
         symbol: !checkAnswer(input.symbol, variable.expectedSymbol, true),
         enhed: !checkAnswer(input.enhed, variable.expectedUnit, true),
       };
-
       errors[variable.name] = varErrors;
-      if (Object.values(varErrors).some((err) => err)) {
-        hasErrors = true;
-      }
+      if (Object.values(varErrors).some((err) => err)) hasErrors = true;
     });
-
     setValidationErrors(errors);
-    // Mark all fields as validated so Next-button validation shows all feedback
     const allValidated: Record<string, Set<'fysiskStorrelse' | 'symbol' | 'enhed'>> = {};
-    config.variables.forEach((variable) => {
+    guide.variables.forEach((variable) => {
       allValidated[variable.name] = new Set(['fysiskStorrelse', 'symbol', 'enhed']);
     });
     setValidatedFields(allValidated);
     return !hasErrors;
   };
 
-  // Validate on blur for instant feedback
   const handleFieldBlur = (variableName: string, fieldType: 'fysiskStorrelse' | 'symbol' | 'enhed') => {
-    if (config.validateVariableInputs) {
-      validateSingleField(variableName, fieldType);
-    }
+    if (guide.validateVariableInputs) validateSingleField(variableName, fieldType);
   };
 
   const controlVars = useMemo(
-    () => config.variables?.filter((v) => v.type === "control") || [],
-    [config.variables]
+    () => guide.variables?.filter((v) => v.type === "control") || [],
+    [guide.variables],
   );
 
   const allConstantsFilled = useMemo(() => {
@@ -249,51 +239,39 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
   }, [constants, controlVars]);
 
   const validRows = useMemo(() => {
-    const measVars = config.variables?.filter((v) => v.type === "independent" || v.type === "dependent") || [];
+    const measVars = guide.variables?.filter((v) => v.type === "independent" || v.type === "dependent") || [];
     return rows.filter((row) => {
-      return measVars.some((v) => {
+      return measVars.every((v) => {
         const val = parseFloat(row[v.name]);
         return Number.isFinite(val) && val > 0;
       });
     });
-  }, [rows, config.variables]);
+  }, [rows, guide.variables]);
 
-  // Check actual progression conditions (for checkmark display - independent of bypassLocks)
   const checkPhase1Conditions = () => {
     if (!hypothesis.trim()) return false;
-    // TODO: Add configurable keyword validation for hypothesis (see TODOS.md)
-    if (!config.validateVariableInputs) return true;
-    if (!config.blockOnWrongVariableInputs) return true;
+    if (!guide.validateVariableInputs) return true;
+    if (!guide.blockOnWrongVariableInputs) return true;
     return Object.keys(validationErrors).length === 0 || !Object.values(validationErrors).some((e) => Object.values(e).some((v) => v));
   };
 
   const checkPhase2Conditions = () => {
-    if (config.requireAllMaterialsChecked) {
-      // If requireAllMaterialsChecked is true, all materials and all setup items must be checked
-      // Ensure arrays have content AND all items are checked (not just vacuously true for empty arrays)
+    if (guide.requireAllMaterialsChecked) {
       const allMaterialsChecked = materialsChecked.length > 0 && materialsChecked.every((checked) => checked);
       const allSetupChecked = setupChecked.every((checked) => checked);
       return allMaterialsChecked && allSetupChecked;
     }
-    // Default: at least some materials or setup items must be checked (setup initiated)
     return materialsChecked.some((checked) => checked) || setupChecked.some((checked) => checked);
   };
 
   const checkPhase3Conditions = () => {
-    const validRows = rows.filter((row) => {
-      const values = Object.values(row);
-      return values.every((v) => v.trim() !== "");
-    });
-    const allConstantsFilled = Object.values(constants).every((c) => c.trim() !== "");
-    return validRows.length >= (config.minMeasurements || 4) && (config.blockOnMissingConstants !== false ? allConstantsFilled : true);
+    const filledRows = rows.filter((row) => Object.values(row).every((v) => v.trim() !== ""));
+    const constantsFilled = Object.values(constants).every((c) => c.trim() !== "");
+    return filledRows.length >= (guide.minMeasurements || 4) && (guide.blockOnMissingConstants !== false ? constantsFilled : true);
   };
 
-  const checkPhase4Conditions = () => {
-    // Phase 4 requires student to have entered a value
-    return studentValue.trim() !== "";
-  };
+  const checkPhase4Conditions = () => studentValue.trim() !== "";
 
-  // Determine if phase is completed (for checkmark display)
   const isPhaseCompleted = (phaseNum: number): boolean => {
     switch (phaseNum) {
       case 1: return checkPhase1Conditions();
@@ -304,22 +282,14 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
     }
   };
 
-  // Determine if button should be enabled (bypassLocks allows skipping requirements)
-  const canProceedFromPhase = (phaseNum: number): boolean => {
-    if (config.bypassLocks) return true;
-    return isPhaseCompleted(phaseNum);
-  };
-
-  const canProceedToPhase4 = config.bypassLocks || (validRows.length >= (config.minMeasurements || 4) && (config.blockOnMissingConstants !== false ? allConstantsFilled : true));
+  const canProceedToPhase4 = guide.bypassLocks || (validRows.length >= (guide.minMeasurements || 4) && (guide.blockOnMissingConstants !== false ? allConstantsFilled : true));
 
   const updateRow = (i: number, field: string, value: string) => {
-    setRows((prev) =>
-      prev.map((r, idx) => (idx === i ? { ...r, [field]: value } : r))
-    );
+    setRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, [field]: value } : r)));
   };
 
   const addRow = () => {
-    const measVars = config.variables?.filter(v => v.type === "independent" || v.type === "dependent") || [];
+    const measVars = guide.variables?.filter(v => v.type === "independent" || v.type === "dependent") || [];
     const newRow = measVars.reduce((acc, v) => ({ ...acc, [v.name]: "" }), {});
     setRows((prev) => [...prev, newRow]);
   };
@@ -339,7 +309,7 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
   const toggleHint = (id: string) => {
     setOpenHints((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
   };
@@ -366,23 +336,31 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
     setVarInputs({});
     setValidationErrors({});
     setValidatedFields({});
-    setMaterialsChecked([]);
-    setSetupChecked([false, false, false, false, false]);
-    setRows(Array.from({ length: config.suggestedMeasurements || 6 }, () => {
-      const measVars = config.variables?.filter(v => v.type === "independent" || v.type === "dependent") || [];
+    setMaterialsChecked(Array.from({ length: guide.materials?.length || 0 }, () => false));
+    setSetupChecked(Array.from({ length: setupItems.length }, () => false));
+    setRows(Array.from({ length: guide.suggestedMeasurements || 6 }, () => {
+      const measVars = guide.variables?.filter(v => v.type === "independent" || v.type === "dependent") || [];
       return measVars.reduce((acc, v) => ({ ...acc, [v.name]: "" }), {});
     }));
     setConstants(
-      (config.variables?.filter(v => v.type === "control") || []).reduce((acc, v) => ({ ...acc, [v.name]: "" }), {})
+      (guide.variables?.filter(v => v.type === "control") || []).reduce((acc, v) => ({ ...acc, [v.name]: "" }), {}),
     );
     setStudentValue("");
-    setReflections(Array.from({ length: config.reflectionQuestions?.length || 0 }, () => ""));
+    setReflections(Array.from({ length: guide.reflectionQuestions?.length || 0 }, () => ""));
     setShowFacit(false);
     setPhase(1);
     setShowClearConfirm(false);
   };
 
-  // Mode selection screen
+  const renderEmbeddedSim = (phaseId: PhaseId) => {
+    if (!canEmbedSim || !embedSimIn.includes(phaseId)) return null;
+    return (
+      <div className="mt-2">
+        <Simulation simulationId={lab.simulationId} />
+      </div>
+    );
+  };
+
   if (phase === "choose") {
     return (
       <div>
@@ -393,29 +371,14 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
           {(
             [
-              {
-                key: "guidet" as Mode,
-                title: "Guidet",
-                desc: "Trin-for-trin vejledning og instruktioner ved hver fase.",
-              },
-              {
-                key: "semi" as Mode,
-                title: "Semi-guidet",
-                desc: "Korte overblik med hints, som du kan åbne efter behov.",
-              },
-              {
-                key: "open" as Mode,
-                title: "Åben undersøgelse",
-                desc: "Kun værktøjerne – du bestemmer selv fremgangsmåden.",
-              },
+              { key: "guidet" as Mode, title: "Guidet", desc: "Trin-for-trin vejledning og instruktioner ved hver fase." },
+              { key: "semi" as Mode, title: "Semi-guidet", desc: "Korte overblik med hints, som du kan åbne efter behov." },
+              { key: "open" as Mode, title: "Åben undersøgelse", desc: "Kun værktøjerne – du bestemmer selv fremgangsmåden." },
             ] as const
           ).map(({ key, title, desc }) => (
             <button
               key={key}
-              onClick={() => {
-                setMode(key);
-                setPhase(1);
-              }}
+              onClick={() => { setMode(key); setPhase(1); }}
               className={`rounded-xl border-2 border-slate-200 bg-white p-5 text-left transition-colors hover:${accent.bgSoft} hover:${accent.border}`}
             >
               <div className={`text-base font-semibold ${accent.text}`}>{title}</div>
@@ -426,8 +389,6 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
       </div>
     );
   }
-
-  const currentIdx = phaseIndex(phase);
 
   return (
     <div>
@@ -451,10 +412,7 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
         {PHASES.map((p, i) => {
           const active = phaseIndex(phase) === i;
           const shouldDisableButton = isPhaseChoosing(phase) && i > 0;
-
-          // Check if phase progression condition is satisfied (for checkmark)
           const done = isPhaseCompleted(i + 1);
-
           return (
             <div key={String(p.key)} className="flex items-center">
               <button
@@ -476,9 +434,7 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
                 </span>
               </button>
               {i < PHASES.length - 1 && (
-                <div
-                  className={`mb-4 h-0.5 w-6 sm:w-12 ${done ? accent.bg : "bg-slate-200"}`}
-                />
+                <div className={`mb-4 h-0.5 w-6 sm:w-12 ${done ? accent.bg : "bg-slate-200"}`} />
               )}
             </div>
           );
@@ -490,28 +446,17 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
         <div className="mt-8 space-y-6">
           <h3 className="text-lg font-semibold text-slate-900">Fase 1 — Planlæg</h3>
 
-          {mode === "semi" && (
-            <div className="mt-3 space-y-3 text-sm text-slate-600" />
-          )}
-
-          {mode !== "open" && config.variables && (
+          {mode !== "open" && guide.variables && (
             <div className="space-y-3">
               <p className="text-sm font-medium text-slate-700">Identificér dine variable:</p>
               <div className="space-y-6">
-                {config.variables.map((v) => {
+                {guide.variables.map((v) => {
                   const typeLabel = {
                     independent: "Uafhængig variabel",
                     dependent: "Afhængig variabel",
                     control: "Konstanter",
                     derived: "Beregnet værdi",
                   }[v.type] || v.type;
-
-                  const typeHelpText = {
-                    independent: "",
-                    dependent: "",
-                    control: "",
-                    derived: "",
-                  }[v.type] || "";
 
                   const varInput = varInputs[v.name] || { fysiskStorrelse: "", symbol: "", enhed: "" };
                   const varError = validationErrors[v.name] || { fysiskStorrelse: false, symbol: false, enhed: false };
@@ -520,12 +465,10 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
                     <div key={v.name} className="rounded-lg border border-slate-200 bg-slate-50 p-4">
                       <label className="block text-xs font-medium text-slate-600">
                         {typeLabel}
-                        {typeHelpText && <span className="font-normal text-slate-500"> — {typeHelpText}</span>}
                       </label>
                       {v.description && <p className="mt-1 text-xs text-slate-500">{v.description}</p>}
 
                       <div className="mt-3 grid gap-3 sm:grid-cols-3">
-                        {/* Fysisk størrelse */}
                         <div>
                           <label className="block text-xs font-medium text-slate-700">Fysisk størrelse</label>
                           <input
@@ -545,7 +488,7 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
                                 : "border-slate-200 focus:ring-sky-400"
                             }`}
                           />
-                          {validatedFields[v.name]?.has('fysiskStorrelse') && config.validateVariableInputs && v.expectedPhysicalQuantity && (
+                          {validatedFields[v.name]?.has('fysiskStorrelse') && guide.validateVariableInputs && v.expectedPhysicalQuantity && (
                             <div className="mt-1 flex items-center gap-1">
                               {varError.fysiskStorrelse ? (
                                 <>
@@ -563,7 +506,6 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
                           )}
                         </div>
 
-                        {/* Symbol */}
                         <div>
                           <label className="block text-xs font-medium text-slate-700">Symbol</label>
                           <input
@@ -583,7 +525,7 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
                                 : "border-slate-200 focus:ring-sky-400"
                             }`}
                           />
-                          {validatedFields[v.name]?.has('symbol') && config.validateVariableInputs && v.expectedSymbol && (
+                          {validatedFields[v.name]?.has('symbol') && guide.validateVariableInputs && v.expectedSymbol && (
                             <div className="mt-1 flex items-center gap-1">
                               {varError.symbol ? (
                                 <>
@@ -601,7 +543,6 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
                           )}
                         </div>
 
-                        {/* Enhed */}
                         <div>
                           <label className="block text-xs font-medium text-slate-700">Enhed</label>
                           <input
@@ -621,7 +562,7 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
                                 : "border-slate-200 focus:ring-sky-400"
                             }`}
                           />
-                          {validatedFields[v.name]?.has('enhed') && config.validateVariableInputs && v.expectedUnit && (
+                          {validatedFields[v.name]?.has('enhed') && guide.validateVariableInputs && v.expectedUnit && (
                             <div className="mt-1 flex items-center gap-1">
                               {varError.enhed ? (
                                 <>
@@ -654,43 +595,32 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
               value={hypothesis}
               onChange={(e) => setHypothesis(e.target.value)}
               rows={3}
-              placeholder={config.hypothesisPlaceholder || "Skriv din hypotese her…"}
+              placeholder={guide.hypothesisPlaceholder || "Skriv din hypotese her…"}
               className="mt-2 w-full rounded-xl border border-slate-200 p-3 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400"
             />
           </div>
 
           <div className="flex items-center justify-between">
             <button
-              onClick={() => {
-                setMode(null);
-                setPhase("choose");
-                setValidatedFields({});
-              }}
+              onClick={() => { setMode(null); setPhase("choose"); setValidatedFields({}); }}
               className="text-sm text-slate-500 hover:underline"
             >
               ← Skift undersøgelsesform
             </button>
             <button
               onClick={() => {
-                const isValid = validateVariableInputs();
-                if (!isValid && config.blockOnWrongVariableInputs && !config.bypassLocks) return;
+                const isValid = validateAllVariableInputs();
+                if (!isValid && guide.blockOnWrongVariableInputs && !guide.bypassLocks) return;
                 setPhase(2);
               }}
-              disabled={!config.bypassLocks && config.validateVariableInputs && config.blockOnWrongVariableInputs && Object.keys(validationErrors).length > 0 && Object.values(validationErrors).some((e) => Object.values(e).some((v) => v))}
+              disabled={!guide.bypassLocks && guide.validateVariableInputs && guide.blockOnWrongVariableInputs && Object.keys(validationErrors).length > 0 && Object.values(validationErrors).some((e) => Object.values(e).some((v) => v))}
               className={`rounded-xl px-6 py-2.5 text-sm font-medium text-white ${accent.bg} disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               Næste fase →
             </button>
           </div>
 
-          <div className="mt-6 border-t border-slate-200 pt-4">
-            <button
-              onClick={() => setShowClearConfirm(true)}
-              className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
-            >
-              Nulstil arbejde
-            </button>
-          </div>
+          <ResetWorkButton onClick={() => setShowClearConfirm(true)} />
         </div>
       )}
 
@@ -723,13 +653,15 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
             </div>
           )}
 
-          {mode === "guidet" && config.materials && (
+          {renderEmbeddedSim("opstil")}
+
+          {mode === "guidet" && guide.materials && (
             <div className="space-y-2">
               <p className="text-sm font-medium text-slate-700">Materialer:</p>
               <div className="flex gap-6">
                 <div className="flex-1">
                   <ul className="space-y-2 text-sm text-slate-600">
-                    {config.materials.map((material, i) => (
+                    {guide.materials.map((material, i) => (
                       <li
                         key={i}
                         className="flex items-start gap-3"
@@ -754,18 +686,18 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
                   </ul>
                 </div>
                 <div className="flex-1 h-64 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 p-6 flex flex-col items-center justify-center">
-                  {hoveredMaterialIdx !== null && config.materials && config.materialImages && config.materials[hoveredMaterialIdx] && config.materialImages[config.materials[hoveredMaterialIdx]] ? (
+                  {hoveredMaterialIdx !== null && guide.materials && guide.materialImages && guide.materials[hoveredMaterialIdx] && guide.materialImages[guide.materials[hoveredMaterialIdx]] ? (
                     <div className="text-center flex flex-col items-center justify-center flex-1">
                       <Image
-                        src={config.materialImages[config.materials[hoveredMaterialIdx]] as any}
-                        alt={config.materials[hoveredMaterialIdx]}
+                        src={guide.materialImages[guide.materials[hoveredMaterialIdx]]}
+                        alt={guide.materials[hoveredMaterialIdx]}
                         className="max-h-48 max-w-full object-contain"
                         width={300}
                         height={300}
                         priority
                       />
                       <p className="mt-3 text-xs font-medium text-slate-600">
-                        {config.materials[hoveredMaterialIdx]}
+                        {guide.materials[hoveredMaterialIdx]}
                       </p>
                     </div>
                   ) : (
@@ -778,7 +710,7 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
 
           <div className="space-y-3">
             <p className="text-sm font-medium text-slate-700">Tjekliste:</p>
-            {["Jeg har fundet alle materialer frem", "Jeg har opstillet mit forsøg, som vist på skitsen", "Jeg har sikret mig, at udstyret virker", "Jeg ved, hvordan jeg måler de variable jeg har planlagt", "Jeg har taget et billede af forsøgsopstillingen"].map((item, i) => (
+            {setupItems.map((item, i) => (
               <div key={i} className="flex items-center">
                 <input
                   type="checkbox"
@@ -792,10 +724,7 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
           </div>
 
           <div className="flex items-center justify-between">
-            <button
-              onClick={() => setPhase(1)}
-              className="text-sm text-slate-500 hover:underline"
-            >
+            <button onClick={() => setPhase(1)} className="text-sm text-slate-500 hover:underline">
               ← Forrige fase
             </button>
             <button
@@ -806,14 +735,7 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
             </button>
           </div>
 
-          <div className="mt-6 border-t border-slate-200 pt-4">
-            <button
-              onClick={() => setShowClearConfirm(true)}
-              className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
-            >
-              Nulstil arbejde
-            </button>
-          </div>
+          <ResetWorkButton onClick={() => setShowClearConfirm(true)} />
         </div>
       )}
 
@@ -821,16 +743,17 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
       {phase === 3 && (
         <div className="mt-8 space-y-6">
           <h3 className="text-lg font-semibold text-slate-900">Fase 3 — Mål</h3>
-          {/* TODO: Add Excel export button for measurement data (see TODOS.md) */}
 
           {mode === "guidet" && (
             <div className={`rounded-xl border ${accent.border} ${accent.bgSoft} p-4 text-sm text-slate-700`}>
               <p className="font-medium text-slate-800">Dataindsamling:</p>
               <p className="mt-2 text-slate-600">
-                {config.dataCollectionGuidance || `Indsaml mindst ${config.minMeasurements || 4}${config.suggestedMeasurements ? `-${config.suggestedMeasurements}` : ""} målinger. Hvis et felt kan beregnes automatisk, udfyldes det af sig selv.`}
+                {guide.dataCollectionGuidance || `Indsaml mindst ${guide.minMeasurements || 4}${guide.suggestedMeasurements ? `-${guide.suggestedMeasurements}` : ""} målinger. Hvis et felt kan beregnes automatisk, udfyldes det af sig selv.`}
               </p>
             </div>
           )}
+
+          {renderEmbeddedSim("maal")}
 
           {controlVars.length > 0 && (
             <div>
@@ -839,11 +762,9 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
                 <tbody>
                   {controlVars.map((variable) => {
                     const varInput = varInputs[variable.name];
-                    const physicalQuantity =
-                      varInput?.fysiskStorrelse || "Fysisk størrelse";
+                    const physicalQuantity = varInput?.fysiskStorrelse || "Fysisk størrelse";
                     const symbol = varInput?.symbol || "Symbol";
                     const unit = varInput?.enhed || "enhed";
-
                     return (
                       <tr key={variable.name}>
                         <td className={`bg-slate-50 border border-slate-200 px-3 py-2 text-slate-700 font-medium`}>
@@ -859,9 +780,7 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
                           <input
                             type="number"
                             value={constants[variable.name] || ""}
-                            onChange={(e) =>
-                              updateConstant(variable.name, e.target.value)
-                            }
+                            onChange={(e) => updateConstant(variable.name, e.target.value)}
                             onWheel={handleNumberInputWheel}
                             placeholder="–"
                             className="w-full border-none bg-transparent p-0 text-slate-800 placeholder:text-slate-400 focus:outline-none"
@@ -880,16 +799,13 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
             <table className="w-full border-collapse text-sm">
               <thead>
                 <tr className="bg-slate-50">
-                  {config.variables
+                  {guide.variables
                     ?.filter((v) => v.type === "independent" || v.type === "dependent")
                     .map((variable) => {
-                      // Determine physical quantity and symbol from Phase 1 input
                       const varInput = varInputs[variable.name];
-                      const physicalQuantity =
-                        varInput?.fysiskStorrelse || "Fysisk størrelse";
+                      const physicalQuantity = varInput?.fysiskStorrelse || "Fysisk størrelse";
                       const symbol = varInput?.symbol || "Symbol";
                       const unit = varInput?.enhed || "enhed";
-
                       return (
                         <th
                           key={variable.name}
@@ -911,21 +827,16 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
               <tbody>
                 {rows.map((row, i) => (
                   <tr key={i}>
-                    {config.variables
+                    {guide.variables
                       ?.filter((v) => v.type === "independent" || v.type === "dependent")
                       .map((variable) => {
                         const value = row[variable.name];
                         return (
-                          <td
-                            key={variable.name}
-                            className="border border-slate-200 px-3 py-2"
-                          >
+                          <td key={variable.name} className="border border-slate-200 px-3 py-2">
                             <input
                               type="number"
                               value={value || ""}
-                              onChange={(e) =>
-                                updateRow(i, variable.name, e.target.value)
-                              }
+                              onChange={(e) => updateRow(i, variable.name, e.target.value)}
                               onWheel={handleNumberInputWheel}
                               placeholder="–"
                               className="w-full border-none bg-transparent p-0 text-slate-800 placeholder:text-slate-400 focus:outline-none"
@@ -948,23 +859,20 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
             </table>
           </div>
 
-          <button
-            onClick={addRow}
-            className="mt-2 text-sm text-slate-500 hover:text-slate-700 underline"
-          >
+          <button onClick={addRow} className="mt-2 text-sm text-slate-500 hover:text-slate-700 underline">
             + Tilføj måling
           </button>
 
           <div className="text-sm text-slate-600">
             <p>
-              Gyldige målinger: <strong>{validRows.length}</strong> / {config.suggestedMeasurements || rows.length}
+              Gyldige målinger: <strong>{validRows.length}</strong> / {guide.suggestedMeasurements || rows.length}
             </p>
-            {!config.bypassLocks && !canProceedToPhase4 && (
+            {!guide.bypassLocks && !canProceedToPhase4 && (
               <div className="mt-1 space-y-1 text-amber-600">
-                {validRows.length < (config.minMeasurements || 4) && (
-                  <p>Indsaml mindst {config.minMeasurements || 4} gyldige målinger før næste fase.</p>
+                {validRows.length < (guide.minMeasurements || 4) && (
+                  <p>Indsaml mindst {guide.minMeasurements || 4} gyldige målinger før næste fase.</p>
                 )}
-                {controlVars.length > 0 && !allConstantsFilled && config.blockOnMissingConstants !== false && (
+                {controlVars.length > 0 && !allConstantsFilled && guide.blockOnMissingConstants !== false && (
                   <p>Udfyld alle konstanter før næste fase.</p>
                 )}
               </div>
@@ -984,79 +892,23 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
             </button>
           </div>
 
-          <div className="mt-6 border-t border-slate-200 pt-4">
-            <button
-              onClick={() => setShowClearConfirm(true)}
-              className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
-            >
-              Nulstil arbejde
-            </button>
-          </div>
+          <ResetWorkButton onClick={() => setShowClearConfirm(true)} />
         </div>
       )}
 
       {/* Phase 4: Analysér */}
       {phase === 4 && (
-        <div className="mt-8 space-y-6">
-          <h3 className="text-lg font-semibold text-slate-900">Fase 4 — Analysér</h3>
-
-          <div className={`rounded-xl border ${accent.border} ${accent.bgSoft} p-4 text-sm text-slate-700`}>
-            <p className="font-medium text-slate-800">Analysér dine resultater:</p>
-            <p className="mt-2 text-slate-600">Sammenlign dine målinger med den teoretiske værdi.</p>
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700">
-                Teoretisk værdi: {config.theoreticalValue || "–"}
-              </label>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700">Din målt værdi:</label>
-              <input
-                type="number"
-                value={studentValue}
-                onChange={(e) => setStudentValue(e.target.value)}
-                placeholder="Indtast din beregnede værdi"
-                className="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400"
-              />
-            </div>
-
-            {config.theoreticalValue && studentValue && (
-              <div className={`rounded-xl border-2 ${accent.border} ${accent.bgSoft} p-4`}>
-                <p className="text-sm font-medium text-slate-700">Resultat:</p>
-                <p className="mt-2 text-slate-600">
-                  Afvigelse:{" "}
-                  <strong>
-                    {(Math.abs((parseFloat(studentValue) - config.theoreticalValue) / config.theoreticalValue) * 100).toFixed(1)}%
-                  </strong>
-                </p>
-              </div>
-            )}
-          </div>
-
-          <div className="flex items-center justify-between">
-            <button onClick={() => setPhase(3)} className="text-sm text-slate-500 hover:underline">
-              ← Forrige fase
-            </button>
-            <button
-              onClick={() => setPhase(5)}
-              className={`rounded-xl px-6 py-2.5 text-sm font-medium text-white ${accent.bg}`}
-            >
-              Næste fase →
-            </button>
-          </div>
-
-          <div className="mt-6 border-t border-slate-200 pt-4">
-            <button
-              onClick={() => setShowClearConfirm(true)}
-              className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
-            >
-              Nulstil arbejde
-            </button>
-          </div>
-        </div>
+        <Phase4Analyse
+          accent={accent}
+          guide={guide}
+          rows={rows}
+          studentValue={studentValue}
+          setStudentValue={setStudentValue}
+          renderEmbeddedSim={renderEmbeddedSim}
+          onPrev={() => setPhase(3)}
+          onNext={() => setPhase(5)}
+          onReset={() => setShowClearConfirm(true)}
+        />
       )}
 
       {/* Phase 5: Konkludér */}
@@ -1064,9 +916,9 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
         <div className="mt-8 space-y-6">
           <h3 className="text-lg font-semibold text-slate-900">Fase 5 — Konkludér</h3>
 
-          {config.reflectionQuestions && config.reflectionQuestions.length > 0 && (
+          {guide.reflectionQuestions && guide.reflectionQuestions.length > 0 && (
             <div className="space-y-6">
-              {config.reflectionQuestions.map((q, i) => (
+              {guide.reflectionQuestions.map((q, i) => (
                 <div key={i}>
                   <label className="block text-sm font-medium text-slate-700">{q}</label>
                   <textarea
@@ -1081,7 +933,7 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
             </div>
           )}
 
-          {config.facit && (
+          {guide.facit && (
             <div>
               <button
                 onClick={() => setShowFacit(!showFacit)}
@@ -1092,7 +944,7 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
               {showFacit && (
                 <div className={`mt-4 rounded-xl border ${accent.border} ${accent.bgSoft} p-4 text-sm text-slate-700`}>
                   <p className="font-medium text-slate-800 mb-2">Facit:</p>
-                  <p>{config.facit}</p>
+                  <p className="whitespace-pre-wrap">{guide.facit}</p>
                 </div>
               )}
             </div>
@@ -1103,28 +955,17 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
               ← Forrige fase
             </button>
             <button
-              onClick={() => {
-                setMode(null);
-                setPhase("choose");
-              }}
+              onClick={() => { setMode(null); setPhase("choose"); }}
               className={`rounded-xl px-6 py-2.5 text-sm font-medium text-white ${accent.bg}`}
             >
               Afslut guide
             </button>
           </div>
 
-          <div className="mt-6 border-t border-slate-200 pt-4">
-            <button
-              onClick={() => setShowClearConfirm(true)}
-              className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
-            >
-              Nulstil arbejde
-            </button>
-          </div>
+          <ResetWorkButton onClick={() => setShowClearConfirm(true)} />
         </div>
       )}
 
-      {/* Clear Work Confirmation Dialog */}
       {showClearConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-lg max-w-sm mx-4 p-6">
@@ -1149,6 +990,134 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function ResetWorkButton({ onClick }: { onClick: () => void }) {
+  return (
+    <div className="mt-6 border-t border-slate-200 pt-4">
+      <button
+        onClick={onClick}
+        className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
+      >
+        Nulstil arbejde
+      </button>
+    </div>
+  );
+}
+
+interface Phase4Props {
+  accent: AccentClasses;
+  guide: LabGuide;
+  rows: Row[];
+  studentValue: string;
+  setStudentValue: (v: string) => void;
+  renderEmbeddedSim: (phaseId: PhaseId) => React.ReactNode;
+  onPrev: () => void;
+  onNext: () => void;
+  onReset: () => void;
+}
+
+function Phase4Analyse({ accent, guide, rows, studentValue, setStudentValue, renderEmbeddedSim, onPrev, onNext, onReset }: Phase4Props) {
+  const fit = useMemo(() => (guide.chart ? fitFromRows(rows, guide.chart) : null), [rows, guide.chart]);
+  const studentNum = parseFloat(studentValue);
+  const theoretical = guide.theoreticalValue;
+  const percentDiff =
+    theoretical && Number.isFinite(studentNum) && studentNum > 0
+      ? Math.abs((studentNum - theoretical) / theoretical) * 100
+      : null;
+  const threshold = guide.deviationThreshold ?? 10;
+  const unit = guide.theoreticalValueUnit ?? "";
+
+  return (
+    <div className="mt-8 space-y-6">
+      <h3 className="text-lg font-semibold text-slate-900">Fase 4 — Analysér</h3>
+
+      <div className={`rounded-xl border ${accent.border} ${accent.bgSoft} p-4 text-sm text-slate-700`}>
+        <p className="font-medium text-slate-800">Analysér dine resultater:</p>
+        <p className="mt-2 text-slate-600">Sammenlign dine målinger med den teoretiske værdi.</p>
+      </div>
+
+      {renderEmbeddedSim("analyser")}
+
+      {guide.chart && (
+        <MeasurementChart rows={rows} chart={guide.chart} />
+      )}
+
+      <div className="space-y-4">
+        {theoretical !== undefined && (
+          <div>
+            <label className="block text-sm font-medium text-slate-700">
+              Teoretisk værdi: {theoretical}{unit ? ` ${unit}` : ""}
+            </label>
+          </div>
+        )}
+
+        <div>
+          <label className="block text-sm font-medium text-slate-700">Din målt værdi:</label>
+          <input
+            type="number"
+            value={studentValue}
+            onChange={(e) => setStudentValue(e.target.value)}
+            placeholder="Indtast din beregnede værdi"
+            className="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400"
+          />
+        </div>
+
+        {theoretical !== undefined && studentValue && Number.isFinite(studentNum) && (
+          <div className={`rounded-xl border-2 ${accent.border} ${accent.bgSoft} p-4`}>
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div>
+                <div className="text-xs text-slate-500">Din målte værdi</div>
+                <div className={`mt-1 font-mono text-lg font-semibold ${accent.text}`}>
+                  {studentNum.toFixed(2)}{unit ? ` ${unit}` : ""}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-slate-500">Teoretisk</div>
+                <div className="mt-1 font-mono text-lg font-semibold text-slate-700">
+                  {theoretical.toFixed(2)}{unit ? ` ${unit}` : ""}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-slate-500">Afvigelse</div>
+                <div
+                  className={`mt-1 font-mono text-lg font-semibold ${
+                    percentDiff !== null && percentDiff < threshold
+                      ? "text-emerald-600"
+                      : percentDiff !== null && percentDiff < threshold * 2
+                        ? "text-amber-600"
+                        : "text-rose-600"
+                  }`}
+                >
+                  {percentDiff !== null ? `${percentDiff.toFixed(1)} %` : "–"}
+                </div>
+              </div>
+            </div>
+            {fit && (
+              <p className="mt-3 text-center text-xs text-slate-500">
+                Hældning fra bedste rette linje: <strong>{fit.slope.toFixed(3)}</strong>
+                {fit.intercept !== 0 && ` · skæring: ${fit.intercept.toFixed(3)}`}
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="flex items-center justify-between">
+        <button onClick={onPrev} className="text-sm text-slate-500 hover:underline">
+          ← Forrige fase
+        </button>
+        <button
+          onClick={onNext}
+          className={`rounded-xl px-6 py-2.5 text-sm font-medium text-white ${accent.bg}`}
+        >
+          Næste fase →
+        </button>
+      </div>
+
+      <ResetWorkButton onClick={onReset} />
     </div>
   );
 }

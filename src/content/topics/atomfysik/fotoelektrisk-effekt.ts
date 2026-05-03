@@ -1,6 +1,6 @@
-import type { Lab } from "@/content/types";
+import type { LabConfig } from "@/content/types";
 
-export const fotoelektriskEffekt: Lab = {
+export const fotoelektriskEffekt: LabConfig = {
   slug: "fotoelektrisk-effekt",
   title: "Den fotoelektriske effekt",
   shortDescription:

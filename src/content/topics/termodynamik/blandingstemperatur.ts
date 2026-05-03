@@ -1,6 +1,6 @@
-import type { Lab } from "@/content/types";
+import type { LabConfig } from "@/content/types";
 
-export const blandingstemperatur: Lab = {
+export const blandingstemperatur: LabConfig = {
   slug: "blandingstemperatur",
   title: "Varmeudveksling og blandingstemperatur",
   shortDescription:

@@ -1,6 +1,6 @@
-import type { Lab } from "@/content/types";
+import type { LabConfig } from "@/content/types";
 
-export const skraatKast: Lab = {
+export const skraatKast: LabConfig = {
   slug: "skraat-kast",
   title: "Skråt kast",
   shortDescription:

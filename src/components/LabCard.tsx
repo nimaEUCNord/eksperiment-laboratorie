@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getAccent } from "@/lib/accent";
-import type { AccentColor, Lab } from "@/content/types";
+import type { AccentColor, LabConfig } from "@/content/types";
 
 export function LabCard({
   lab,
@@ -8,7 +8,7 @@ export function LabCard({
   accentColor,
   index,
 }: {
-  lab: Lab;
+  lab: LabConfig;
   topicSlug: string;
   accentColor: AccentColor;
   index: number;

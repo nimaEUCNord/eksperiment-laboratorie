@@ -1,6 +1,6 @@
-import type { Lab } from "@/content/types";
+import type { LabConfig } from "@/content/types";
 
-export const roentgenEnerg: Lab = {
+export const roentgenEnerg: LabConfig = {
   slug: "roentgen-energi",
   title: "Røntgenstråling og energi",
   shortDescription:

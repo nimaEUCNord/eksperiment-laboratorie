@@ -1,16 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import type { Lab } from "@/content/types";
+import type { LabConfig } from "@/content/types";
 import type { AccentClasses } from "@/lib/accent";
 import { Simulation } from "./Simulation";
-import HookesLovLabGuide from "./HookesLovLabGuide";
-import GenericLabGuide from "./GenericLabGuide";
+import LabTemplate from "./LabTemplate";
 import { Equation } from "./Equation";
 import { RichText } from "./RichText";
 
 interface LabPageContentProps {
-  lab: Lab;
+  lab: LabConfig;
   accent: AccentClasses;
 }
 
@@ -19,8 +18,8 @@ export default function LabPageContent({ lab, accent }: LabPageContentProps) {
 
   return (
     <>
-      {/* Background sections - collapsible */}
-      {lab.labGuide && (
+      {/* Background sections - collapsible when a guide is present */}
+      {lab.guide && (
         <div className="mt-10">
           <button
             onClick={() => setExpandBackground(!expandBackground)}
@@ -90,8 +89,8 @@ export default function LabPageContent({ lab, accent }: LabPageContentProps) {
         </>
       )}
 
-      {/* Simulation section - only show when not in lab guide mode */}
-      {!lab.labGuide && (
+      {/* Plain simulation section — only when there's no guide */}
+      {!lab.guide && lab.simulationId && (
         <section className="mt-10">
           <h2 className="text-xl font-semibold text-slate-900">Simulation</h2>
           <p className="mt-2 text-sm text-slate-600">
@@ -104,8 +103,8 @@ export default function LabPageContent({ lab, accent }: LabPageContentProps) {
         </section>
       )}
 
-      {/* Lab observations - only show when not in lab guide mode */}
-      {!lab.labGuide && lab.observations && lab.observations.length > 0 ? (
+      {/* Lab observations — only when there's no guide */}
+      {!lab.guide && lab.observations && lab.observations.length > 0 ? (
         <section className="mt-10">
           <h2 className="text-xl font-semibold text-slate-900">I laboratoriet</h2>
           <p className="mt-2 text-sm text-slate-600">
@@ -129,16 +128,11 @@ export default function LabPageContent({ lab, accent }: LabPageContentProps) {
       ) : null}
 
       {/* Lab guide section */}
-      {lab.labGuide && (
+      {lab.guide && (
         <section className="mt-10">
-          {lab.labGuideConfig ? (
-            <GenericLabGuide lab={lab} config={lab.labGuideConfig} accent={accent} />
-          ) : (
-            <HookesLovLabGuide accent={accent} />
-          )}
+          <LabTemplate lab={lab} guide={lab.guide} accent={accent} />
         </section>
       )}
     </>
   );
 }
-

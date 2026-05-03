@@ -1,6 +1,6 @@
-import type { Lab } from "@/content/types";
+import type { LabConfig } from "@/content/types";
 
-export const indreModstand: Lab = {
+export const indreModstand: LabConfig = {
   slug: "indre-modstand",
   title: "Indre modstand i et batteri",
   shortDescription:

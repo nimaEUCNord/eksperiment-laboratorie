@@ -1,11 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { HookesLovInquiry } from "@/components/HookesLovInquiry";
 import LabPageContent from "@/components/LabPageContent";
 import { getAccent } from "@/lib/accent";
 import { getAllTopics, getLab } from "@/lib/content";
-import type { Lab } from "@/content/types";
+import type { LabConfig } from "@/content/types";
 
 type Params = { topic: string; lab: string };
 
@@ -64,17 +63,6 @@ export default async function LabPage({
     </header>
   );
 
-  if (lab.inquiry) {
-    return (
-      <div className="mx-auto max-w-5xl px-4 sm:px-6">
-        {breadcrumb}
-        {header}
-        <HookesLovInquiry accent={accent} />
-        <div className="pb-16" />
-      </div>
-    );
-  }
-
   return (
     <div className="mx-auto max-w-4xl px-4 sm:px-6">
       {breadcrumb}
@@ -94,6 +82,6 @@ export default async function LabPage({
   );
 }
 
-function hasFullContent(lab: Lab): boolean {
+function hasFullContent(lab: LabConfig): boolean {
   return Boolean(lab.goal && lab.keyConcepts && lab.keyConcepts.length > 0);
 }

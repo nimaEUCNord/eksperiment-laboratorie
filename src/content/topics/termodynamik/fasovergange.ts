@@ -1,6 +1,6 @@
-import type { Lab } from "@/content/types";
+import type { LabConfig } from "@/content/types";
 
-export const fasovergange: Lab = {
+export const fasovergange: LabConfig = {
   slug: "fasovergange",
   title: "Energi ved fasovergange",
   shortDescription:

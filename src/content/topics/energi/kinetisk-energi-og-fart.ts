@@ -1,6 +1,6 @@
-import type { Lab } from "@/content/types";
+import type { LabConfig } from "@/content/types";
 
-export const kinetiskEnergiOgFart: Lab = {
+export const kinetiskEnergiOgFart: LabConfig = {
   slug: "kinetisk-energi-og-fart",
   title: "Kinetisk energi og fart",
   shortDescription:

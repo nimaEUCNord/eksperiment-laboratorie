@@ -1,6 +1,6 @@
-import type { Lab } from "@/content/types";
+import type { LabConfig } from "@/content/types";
 
-export const halveringstid: Lab = {
+export const halveringstid: LabConfig = {
   slug: "halveringstid",
   title: "Halveringstid for radioaktivt henfald",
   shortDescription:

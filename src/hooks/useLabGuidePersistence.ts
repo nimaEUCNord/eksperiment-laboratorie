@@ -2,7 +2,7 @@
 
 import { useCallback, useState, useEffect } from 'react';
 
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 
 export interface PersistedLabGuideState {
   hypothesis: string;

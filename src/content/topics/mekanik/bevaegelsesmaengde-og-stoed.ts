@@ -1,6 +1,6 @@
-import type { Lab } from "@/content/types";
+import type { LabConfig } from "@/content/types";
 
-export const bevaegelsesmaengdeOgStoed: Lab = {
+export const bevaegelsesmaengdeOgStoed: LabConfig = {
   slug: "bevaegelsesmaengde-og-stoed",
   title: "Bevægelsesmængde og stød",
   shortDescription:

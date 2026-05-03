@@ -1,6 +1,6 @@
-import type { Lab } from "@/content/types";
+import type { LabConfig } from "@/content/types";
 
-export const spesifikVarmekapacitet: Lab = {
+export const spesifikVarmekapacitet: LabConfig = {
   slug: "specifik-varmekapacitet",
   title: "Specifik varmekapacitet",
   shortDescription:

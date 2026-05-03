@@ -1,6 +1,6 @@
-import type { Lab } from "@/content/types";
+import type { LabConfig } from "@/content/types";
 
-export const dobbeltspalte: Lab = {
+export const dobbeltspalte: LabConfig = {
   slug: "dobbeltspalte",
   title: "Dobbeltspalteforsøget",
   shortDescription:

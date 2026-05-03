@@ -1,6 +1,6 @@
-import type { Lab } from "@/content/types";
+import type { LabConfig } from "@/content/types";
 
-export const serieOgParallelkreds: Lab = {
+export const serieOgParallelkreds: LabConfig = {
   slug: "serie-og-parallelkreds",
   title: "Seriekreds vs. parallelkreds",
   shortDescription:

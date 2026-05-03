@@ -1,6 +1,6 @@
-import type { Lab } from "@/content/types";
+import type { LabConfig } from "@/content/types";
 
-export const kondensatorOpladning: Lab = {
+export const kondensatorOpladning: LabConfig = {
   slug: "kondensator-opladning",
   title: "Kondensator opladning og afladning",
   shortDescription:

@@ -1,6 +1,6 @@
-import type { Lab } from "@/content/types";
+import type { LabConfig } from "@/content/types";
 
-export const boyleMariotte: Lab = {
+export const boyleMariotte: LabConfig = {
   slug: "boyle-mariotte",
   title: "Boyle-Mariottes lov",
   shortDescription:

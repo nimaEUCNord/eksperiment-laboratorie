@@ -1,6 +1,6 @@
-import type { Lab } from "@/content/types";
+import type { LabConfig } from "@/content/types";
 
-export const staaendeBoelgerPaaStreng: Lab = {
+export const staaendeBoelgerPaaStreng: LabConfig = {
   slug: "staaende-boelger-paa-streng",
   title: "Stående bølger på en streng",
   shortDescription:

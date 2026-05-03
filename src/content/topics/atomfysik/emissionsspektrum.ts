@@ -1,6 +1,6 @@
-import type { Lab } from "@/content/types";
+import type { LabConfig } from "@/content/types";
 
-export const emissionsspektrum: Lab = {
+export const emissionsspektrum: LabConfig = {
   slug: "emissionsspektrum",
   title: "Brintatomets emissionsspektrum",
   shortDescription:

@@ -1,6 +1,6 @@
-import type { Lab } from "@/content/types";
+import type { LabConfig } from "@/content/types";
 
-export const penduletsSvingningstid: Lab = {
+export const penduletsSvingningstid: LabConfig = {
   slug: "pendulets-svingningstid",
   title: "Pendulets svingningstid",
   shortDescription:
