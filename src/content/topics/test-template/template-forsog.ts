@@ -9,7 +9,7 @@ import stativmuffeImg from "@/assets/images/equipment/template-forsog/stativmuff
 
 export const templateForsog: LabConfig = {
   slug: "template-forsog",
-  title: "Template forsøg",
+  title: "Testforsøg",
   shortDescription: "Viser alle sektion og 6-fase struktur med generisk guide",
   goal: "At undersøge sammenhængen mellem masse og tyngdekraft, og bestemme tyngdeaccelerationen ud fra data",
   keyConcepts: [

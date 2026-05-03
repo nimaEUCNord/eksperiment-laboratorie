@@ -3,10 +3,10 @@ import { templateForsog } from "./template-forsog";
 
 export const testTemplate: Topic = {
   slug: "test-template",
-  title: "Test og Template",
-  tagline: "Template til nye forsøg",
+  title: "Skabelon",
+  tagline: "Skabelon til nye forsøg",
   description:
-    "Dette er et testforsøg, der viser alle sektioner og den nye generiske 6-fase laboratorieguide. Brug det som skabelon når du designer nye guidede forsøg.",
+    "Dette er et testforsøg, der viser alle sektioner og faser i forsøgene. Bruges som skabelon til at designe nye forsøg.",
   accentColor: "sky",
   labs: [templateForsog],
 };
