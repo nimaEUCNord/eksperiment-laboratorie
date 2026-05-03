@@ -150,40 +150,77 @@ Produce a complete Danish-language lab design document in this exact structure:
 
 ### TypeScript-konfiguration
 
+Create one file at `src/content/topics/[topic]/[slug].ts` exporting a single `LabConfig`. Then add the import + reference to that topic's `index.ts`.
+
 ```typescript
-// Tilføj til src/content/topics.ts under emnet [Topic]
-{
+import type { LabConfig } from "@/content/types";
+
+export const [camelCaseSlug]: LabConfig = {
   slug: "[kebab-case-slug]",
   title: "[Forsøgsnavn]",
   shortDescription: "[1 sentence, Danish]",
   goal: "[Læringsmål]",
   keyConcepts: ["[Concept 1]", "[Concept 2]", "[Concept 3]"],
-  keyEquation: "[Equation as string, e.g. 'T = 2π√(l/g)']",
-  labGuide: true,
-  // simulationId: "[sim-id]", // Add when simulation is built
-}
+  keyEquation: "[LaTeX, e.g. 'T = 2\\pi\\sqrt{l/g}']",
+  // simulationId: "[sim-id]", // add when sim is built and registered in Simulation.tsx
+  guide: {
+    hypothesis: "[Pre-filled expected relationship]",
+    hypothesisPlaceholder: "[Sentence-starter for the student's input]",
+    validateVariableInputs: true,
+    blockOnWrongVariableInputs: false,
+    bypassLocks: true,
+    minMeasurements: 4,
+    suggestedMeasurements: 6,
+    variables: [
+      { name: "[Independent var name]", type: "independent",
+        expectedPhysicalQuantity: "[…]", expectedSymbol: "[…]", expectedUnit: ["[…]"] },
+      { name: "[Dependent var name]", type: "dependent",
+        expectedPhysicalQuantity: "[…]", expectedSymbol: "[…]", expectedUnit: ["[…]"] },
+      { name: "[Control var name]", type: "control",
+        expectedPhysicalQuantity: "[…]", expectedSymbol: "[…]", expectedUnit: ["[…]"] },
+    ],
+    materials: ["[Item 1]", "[Item 2]"],
+    setupItems: [/* phase-2 checklist; omit to use the generic 5-item default */],
+    embedSimulationInPhases: ["opstil", "maal", "analyser"], // omit if no sim
+    chart: {
+      xField: "[Variable name from variables[]]",
+      yField: "[Variable name from variables[]]",
+      xScale: 1,                         // multiplier applied to raw cell values (e.g. 1/1000 for mm→m)
+      yScale: 1,                         // e.g. 9.82/1000 for g→N (m·g)
+      xLabel: "[Axis label with unit]",
+      yLabel: "[Axis label with unit]",
+      fitMode: "through-origin",         // or "free" or "none"
+      slopeSymbol: "[k]",
+      slopeUnit: "[N/m]",
+    },
+    theoreticalValue: 0,
+    theoreticalValueUnit: "[unit]",
+    deviationThreshold: 10,
+    reflectionQuestions: [
+      "1. [Question about discovered relationship]",
+      "2. [Question comparing measurement to theory]",
+      "3. [Question about error sources]",
+      "4. [Question about real-world application]",
+    ],
+    facit: "[3–4 sentence model answer in Danish]",
+  },
+};
 ```
 
 ---
 
 ### Komponentnoter
 
-**Fase 3 — Mål (MeasurePhase tabelkolonner):**
-```
-[List each column: name, placeholder, whether auto-calculated, formula]
-```
+The lab is fully driven by the config above — no new component files are needed unless the lab requires a brand-new simulation or chart shape that the current `MeasurementChart` cannot express.
 
-**Fase 4 — Analysér (AnalyzePhase konfiguration):**
-- X-akse: [label + unit]
-- Y-akse: [label + unit]
-- Regressionstype: [through origin / with intercept]
-- Sammenligningsparameter: [parameter name + unit]
-- SIM_[PARAMETER] konstant: [reference value]
+**Where things live:**
+- [src/components/LabTemplate.tsx](src/components/LabTemplate.tsx) — single guide implementation; renders all 5 phases for any `LabConfig.guide`
+- [src/components/MeasurementChart.tsx](src/components/MeasurementChart.tsx) — generic Chart.js scatter; tweak `chart.fitMode` (through-origin / free / none) and `xScale` / `yScale` to map raw measurement values to plotted units
+- [src/components/Simulation.tsx](src/components/Simulation.tsx) — register a new sim id here if you're adding one
 
-**Genbrugelige komponenter:**
-- `MeasurePhase.tsx` — reuse with new column config
-- `ForceExtensionChart.tsx` — adapt or create new chart component for this lab's axes
-- `HookesLovLabGuide.tsx` — use as structural reference for the new lab guide component
+**Reference labs:**
+- [src/content/topics/test-template/template-forsog.ts](src/content/topics/test-template/template-forsog.ts) — canonical scaffolded reference
+- [src/content/topics/mekanik/hookes-lov.ts](src/content/topics/mekanik/hookes-lov.ts) — production lab with embedded sim, chart with mass→force conversion, fit-through-origin
 
 ---
 

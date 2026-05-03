@@ -19,28 +19,30 @@ Eksperiment Laboratorie — a Danish-language Next.js site of physics labs for H
 
 There is no test runner configured.
 
-A preview launch config is committed at `.claude/launch.json` (named `next-dev`); use it with the preview tooling instead of running `next dev` via Bash.
+A preview launch config is committed at `.claude/launch.json` (named `next-dev`); use it with the preview tooling instead of running `next dev` via Bash. **Do not run `npm run build` while the dev server is running** — they fight over `.next/` and corrupt the cache. Stop the dev server first, or use a separate build directory.
 
 ## Available skills
 
-- `/design-lab` — Design a new physics lab guide following the 6-phase template; generates a complete LabGuideConfig scaffold
+- `/design-lab` — Design a new physics lab guide following the 6-phase template; generates a complete `LabConfig` with nested `guide`
 - Memory consolidation — Use `/anthropic-skills:consolidate-memory` to audit and tidy memory files (durable context across sessions)
 
 ## Architecture
 
 ### Content model
 
-The content tree is organized hierarchically by topic. Each topic lives in its own directory under [src/content/topics/](src/content/topics/), with individual labs as separate files grouped by topic. All types are defined in [src/content/types.ts](src/content/types.ts); the assembly is in [src/content/index.ts](src/content/index.ts).
+The content tree is organised hierarchically by topic. Each topic lives in its own directory under [src/content/topics/](src/content/topics/), with one file per lab. All types are defined in [src/content/types.ts](src/content/types.ts); the assembly is in [src/content/index.ts](src/content/index.ts).
+
+**Single source of truth per lab:** every lab is one `LabConfig` object exported from one file. Identity, background sections (goal/theory/keyConcepts), and the optional interactive guide all live in the same object. There is no separate `.config.ts`.
 
 **File structure:**
 ```
 src/content/
 ├── index.ts                          (assembles topics, exports topics[])
-├── types.ts                          (Lab, Topic, LabGuideConfig types)
+├── types.ts                          (LabConfig, LabGuide, Topic, ChartConfig, ...)
 └── topics/
     ├── mekanik/
-    │   ├── index.ts                  (exports Topic + Lab[] for this topic)
-    │   ├── hookes-lov.ts             (Lab definition)
+    │   ├── index.ts                  (exports Topic + LabConfig[] for this topic)
+    │   ├── hookes-lov.ts             (full LabConfig with guide)
     │   ├── skraat-kast.ts
     │   └── ...
     ├── energi/
@@ -50,19 +52,18 @@ src/content/
     ├── termodynamik/
     └── test-template/
         ├── index.ts
-        ├── template-forsog.ts        (Lab with labGuide: true)
-        └── template-forsog.config.ts (LabGuideConfig)
+        └── template-forsog.ts        (canonical reference — full LabConfig with guide)
 ```
 
-To add a lab, create a new file in the appropriate topic's directory (e.g., `src/content/topics/mekanik/my-lab.ts`) exporting a `Lab`. Each `Lab` has optional `goal`, `keyConcepts`, `keyEquation`, `theory`, `observations`, `simulationId`, `labGuide`, `labGuideConfig`. If `labGuide: true`, create a separate `[lab-slug].config.ts` file exporting the `LabGuideConfig`. Pages are statically generated from this data — there is no CMS.
+To add a lab, create a new file in the appropriate topic's directory (e.g., `src/content/topics/mekanik/my-lab.ts`) exporting a `LabConfig`. Pages are statically generated from this data — there is no CMS.
 
-The lab page conditionally renders sections per field, so a stub lab (just `slug`/`title`/`shortDescription`) renders an "Under udarbejdelse" placeholder.
+A stub lab (only `slug`/`title`/`shortDescription` set) renders an "Under udarbejdelse" placeholder. Adding `goal` + `keyConcepts` flips it to fully rendered.
 
 ### Routing
 
 - `/` — landing page, lists topics
 - `/emner/[topic]` — topic page, lists labs
-- `/emner/[topic]/[lab]` — lab page, renders content sections + simulation
+- `/emner/[topic]/[lab]` — lab page, renders content sections + simulation or guide
 
 Both dynamic routes use `generateStaticParams` over `getAllTopics()`, so the whole site pre-renders at build time. `getTopic` / `getLab` in [src/lib/content.ts](src/lib/content.ts) are the lookup helpers.
 
@@ -70,7 +71,7 @@ Both dynamic routes use `generateStaticParams` over `getAllTopics()`, so the who
 
 Simulations are React client components living in `src/components/sims/`. The router-side flow:
 
-1. The lab data references a sim by string id (`Lab.simulationId`).
+1. The lab data references a sim by string id (`LabConfig.simulationId`).
 2. [src/components/Simulation.tsx](src/components/Simulation.tsx) maps each id to a `next/dynamic` import with `ssr: false` and a shared `SimulationLoading` fallback. **A new sim must be registered here** or the lab page falls back to a "kommer her" placeholder.
 3. The sim component itself is `"use client"`, owns the slider React state, and renders a `<P5Canvas>` from `@p5-wrapper/react` plus a stat row and slider panel. [src/components/sims/HookesLov.tsx](src/components/sims/HookesLov.tsx) is the cleanest reference; `SkraatKast.tsx` is the older variant.
 
@@ -98,64 +99,74 @@ Slider values flow `React state → P5Canvas props → updateWithProps → closu
 
 ### Styling
 
-Tailwind v4 (CSS-first, configured via PostCSS — no `tailwind.config.ts`). Topic colors are centralized in [src/lib/accent.ts](src/lib/accent.ts): each `AccentColor` maps to a bundle of Tailwind classes (`bg`, `bgSoft`, `text`, `border`, …). When writing a new topic, pick from the existing six palette names rather than inventing new colors. Topic/lab pages and cards consume the bundle via `getAccent(topic.accentColor)`.
+Tailwind v4 (CSS-first, configured via PostCSS — no `tailwind.config.ts`). Topic colors are centralised in [src/lib/accent.ts](src/lib/accent.ts): each `AccentColor` maps to a bundle of Tailwind classes (`bg`, `bgSoft`, `text`, `border`, …). When writing a new topic, pick from the existing six palette names rather than inventing new colors. Topic/lab pages and cards consume the bundle via `getAccent(topic.accentColor)`.
 
 ### Lab page rendering
 
-[src/app/emner/\[topic\]/\[lab\]/page.tsx](src/app/emner/[topic]/[lab]/page.tsx) is the single template that renders every lab. New optional fields on `Lab` should be added to `types.ts` and rendered conditionally here, following the existing pattern (`{lab.x ? <section>…</section> : null}`). Equation rendering uses an in-file `renderEquation` helper that italicizes single-letter tokens — no KaTeX/MathJax dependency.
+[src/app/emner/\[topic\]/\[lab\]/page.tsx](src/app/emner/[topic]/[lab]/page.tsx) is the single template that renders every lab. It reads optional fields off the `LabConfig` and conditionally renders sections via [LabPageContent.tsx](src/components/LabPageContent.tsx).
+
+Routing logic, top-down:
+- Background sections (Formål, Centrale begreber, Nøgleligning, Teori) render whenever the corresponding fields are set; collapsible when a guide is present.
+- If `lab.guide` is set → render `<LabTemplate>` (the only guide implementation).
+- Otherwise → if `simulationId` is set, render `<Simulation>`; if `observations` is set, render the "I laboratoriet" list.
+- If `goal` and `keyConcepts` are missing, the "Under udarbejdelse" placeholder is appended.
+
+New optional fields on `LabConfig` should be added to [types.ts](src/content/types.ts) and rendered conditionally in `LabPageContent`, following the existing pattern.
 
 ### Lab guide system
 
-Setting `labGuide: true` on a `Lab` entry replaces the simulation and observations sections with an interactive lab guide. The guide has three inquiry modes chosen by the student at runtime:
+Setting `guide: { ... }` on a `LabConfig` replaces the simulation/observations sections with an interactive lab guide. Students choose one of three scaffolding modes:
 
 - **Guidet** — full step-by-step instructions at every phase
 - **Semi-guidet** — brief overview + collapsible hint boxes
 - **Åben undersøgelse** — just the tools, no prompting
 
-**Recommended approach (2026-05-02):** Use the reusable `GenericLabGuide` component via a `LabGuideConfig`. This replaces the earlier lab-specific `HookesLovLabGuide` approach.
-
-The guide flows through five phases: Planlæg (hypothesis + variable identification) → Opstil (apparatus setup + setup checklist) → Mål (data entry table with auto-calculated fields) → Analysér (Chart.js scatter plot with least-squares best-fit line, student value input, comparison against theory) → Konkludér (guided reflection questions + facit reveal).
+The guide flows through five phases: Planlæg (hypothesis + variable identification) → Opstil (apparatus setup + checklist + optional embedded sim) → Mål (data entry table with constants column) → Analysér (Chart.js scatter plot with configurable best-fit, student value input, % deviation panel) → Konkludér (reflection questions + facit reveal).
 
 Key files:
-- [src/components/GenericLabGuide.tsx](src/components/GenericLabGuide.tsx) — reusable lab guide component (all 5 phases, 3 modes, state, validation, **persistence**)
-- [src/components/HookesLovLabGuide.tsx](src/components/HookesLovLabGuide.tsx) — legacy lab-specific guide (to be refactored to use GenericLabGuide)
-- [src/components/ForceExtensionChart.tsx](src/components/ForceExtensionChart.tsx) — Chart.js scatter + regression line; uses `chart.js` v4 + `react-chartjs-2` v5
+- [src/components/LabTemplate.tsx](src/components/LabTemplate.tsx) — the only lab guide component (all 5 phases, 3 modes, state, validation, persistence)
+- [src/components/MeasurementChart.tsx](src/components/MeasurementChart.tsx) — generic Chart.js scatter; configurable axes, scales, fit mode
+- [src/hooks/useLabGuidePersistence.ts](src/hooks/useLabGuidePersistence.ts) — versioned localStorage save/restore
 
-The chart uses a `Scatter` component with `showLine: true` on the best-fit dataset (avoids mixed-type generic conflicts in Chart.js TypeScript). The regression is least-squares through origin: `k = Σ(xi·Fi) / Σ(xi²)`.
+`MeasurementChart` accepts a `ChartConfig` (`xField`, `yField`, `xLabel`, `yLabel`, optional `xScale`/`yScale`, `fitMode: "through-origin" | "free" | "none"`, optional `slopeSymbol`/`slopeUnit`). `xField`/`yField` are the variable names from `guide.variables` — the chart pulls raw values from each measurement row, applies the optional scales, and fits a line through the resulting points. For Hookes' law: `xField: "Forlængelse"` with `xScale: 1/1000` (mm → m); `yField: "Masse"` with `yScale: 9.82/1000` (g → N via `m·g`); `fitMode: "through-origin"`; `slopeSymbol: "k"`; `slopeUnit: "N/m"`.
 
-#### Data persistence (2026-05-02)
+Chart.js typing: keep using `<Scatter>` with `showLine: true` on the fit dataset to avoid mixed-type generic conflicts.
 
-GenericLabGuide automatically persists student work to browser localStorage. On page refresh, students see their data restored with a notification. Each lab stores data independently via `lab-guide:${labSlug}` keys. Students can intentionally clear all work via a "Nulstil arbejde" button with confirmation dialog.
+#### Data persistence
+
+`LabTemplate` automatically persists student work to browser localStorage. On page refresh, students see their data restored with a notification. Each lab stores data independently via `lab-guide:${labSlug}` keys. Students can intentionally clear all work via a "Nulstil arbejde" button with confirmation dialog.
 
 **What persists:** hypothesis, variable inputs, measurements, analysis values, reflections, and scaffolding mode choice. **What doesn't:** current phase (resets to 1), expanded hints, facit visibility.
 
-See `src/hooks/useLabGuidePersistence.ts` and `.claude/memory/feature_persistence.md` for implementation details.
+The persistence layer is versioned (`SCHEMA_VERSION` in [useLabGuidePersistence.ts](src/hooks/useLabGuidePersistence.ts)). Bump it whenever the persisted state shape changes; old data is auto-discarded.
 
 ### Lab guide design standard (6-phase template)
 
-All new lab guides should follow the **6-phase reusable template** documented in [docs/lab-guide-design-principles.md](docs/lab-guide-design-principles.md). This is the standard for every new lab — simulated and physical.
+All new lab guides should follow the **6-phase reusable template** documented in [docs/lab-guide-design-principles.md](docs/lab-guide-design-principles.md). The implementation today covers phases 1–5; **Reportér** (phase 6) is opt-in for labs that need a formal report.
 
 The 6 phases:
 1. **Planlæg** — hypothesis formation, variable identification, prediction
 2. **Opstil** — apparatus setup and measurement strategy (brief for simulations, critical for physical labs)
-3. **Mål** — structured data collection with auto-calculated fields and validation
+3. **Mål** — structured data collection
 4. **Analysér** — chart analysis, key parameter estimation, comparison to theory
 5. **Konkludér** — reflection, synthesis, model answer reveal
-6. **Reportér** — formal lab report (optional; omit unless required)
+6. **Reportér** — formal lab report (optional)
 
-Each phase adapts to three scaffolding modes: **Guidet** (heavy), **Semi-guidet** (hints), **Åben undersøgelse** (tools only).
+Each phase adapts to three scaffolding modes.
 
-#### How to add a new lab with GenericLabGuide
+#### How to add a new lab
 
-1. Create a `[lab-slug].ts` file in the appropriate topic folder with `labGuide: true`
-2. Create a `[lab-slug].config.ts` exporting `LabGuideConfig`:
-   - `hypothesis`: expected relationship (e.g., "F = mg")
-   - `variables`: array of `Variable` with type (independent/dependent/control/derived), units, and expected answers
-   - `measurementFields`: table columns with auto-calculate flags
-   - `theoreticalValue` / `deviationThreshold`: for % comparison in Analysér
-   - `reflectionQuestions`: prompts for Konkludér
-   - `facit`: model answer (revealed on demand)
-   - Validation flags: `validateVariableInputs`, `blockOnWrongVariableInputs`
-3. See `src/content/topics/test-template/template-forsog.config.ts` for a complete example
+1. Create one file at `src/content/topics/[topic]/[lab-slug].ts` exporting a `LabConfig`. Add it to that topic's `index.ts`.
+2. Set the identity fields (`slug`, `title`, `shortDescription`) plus any background sections (`goal`, `keyConcepts`, `keyEquation`, `theory`).
+3. To enable the interactive guide, add a `guide: LabGuide` object:
+   - **Phase 1**: `hypothesis`, `hypothesisPlaceholder`, `variables` (independent / dependent / control), and validation flags (`validateVariableInputs`, `blockOnWrongVariableInputs`).
+   - **Phase 2**: `materials`, optional `materialImages` (typed as `Record<string, StaticImageData>`), `setupItems` (falls back to a generic 5-item list).
+   - **Phase 3**: `minMeasurements`, `suggestedMeasurements`, `dataCollectionGuidance`, `blockOnMissingConstants`.
+   - **Phase 4**: `chart` (see ChartConfig above), `theoreticalValue` + `theoreticalValueUnit`, `deviationThreshold`.
+   - **Phase 5**: `reflectionQuestions`, `facit`.
+   - Cross-cutting: `embedSimulationInPhases: ("opstil" | "maal" | "analyser")[]` to inline the sim, `bypassLocks` to disable progression locks.
+4. To embed a simulation, set `simulationId` on the `LabConfig` and register the sim in [Simulation.tsx](src/components/Simulation.tsx). The simulation is rendered standalone for guide-less labs, or inline within phases listed in `guide.embedSimulationInPhases`.
 
-When designing a new lab guide, use the `/design-lab` skill to generate a filled-out phase scaffold. See `.claude/memory/project_generic_lab_guide.md` for full API documentation.
+[src/content/topics/test-template/template-forsog.ts](src/content/topics/test-template/template-forsog.ts) is the canonical reference. [src/content/topics/mekanik/hookes-lov.ts](src/content/topics/mekanik/hookes-lov.ts) is a real production lab with embedded sim and chart.
+
+When designing a new lab guide, use the `/design-lab` skill to generate a filled-out phase scaffold.
