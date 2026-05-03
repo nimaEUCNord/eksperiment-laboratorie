@@ -10,13 +10,6 @@ export type Variable = {
   expectedUnit?: string | string[];
 };
 
-export type MeasurementField = {
-  label: string;
-  unit: string;
-  autoCalculate: boolean;
-  formula?: string;
-};
-
 export type PhaseId = "opstil" | "maal" | "analyser";
 
 export type ChartFitMode = "through-origin" | "free" | "none";
@@ -49,7 +42,6 @@ export type LabGuide = {
   requireAllMaterialsChecked?: boolean;
 
   // Phase 3 — Mål
-  measurementFields?: MeasurementField[];
   minMeasurements?: number;
   suggestedMeasurements?: number;
   dataCollectionGuidance?: string;

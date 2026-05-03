@@ -58,11 +58,6 @@ export const templateForsog: LabConfig = {
         expectedUnit: ["m/s²", "m/s^2", "N/kg"],
       },
     ],
-    measurementFields: [
-      { label: "Måling 1", unit: "enheder", autoCalculate: false },
-      { label: "Måling 2", unit: "enheder", autoCalculate: false },
-      { label: "Beregnet værdi", unit: "enheder", autoCalculate: true, formula: "m1 * m2" },
-    ],
     theoreticalValue: 25,
     deviationThreshold: 10,
     reflectionQuestions: [
