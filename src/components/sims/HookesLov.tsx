@@ -339,13 +339,9 @@ function Stat({
 }) {
   return (
     <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
-      <div className="flex items-baseline gap-2">
-        <span className="font-serif text-lg italic text-slate-500">
-          {symbol}
-        </span>
-        <span className="text-xs uppercase tracking-wider text-slate-500">
-          {label}
-        </span>
+      <div className="flex items-baseline gap-1 text-sm text-slate-600">
+        <span>{label},</span>
+        <span className="font-serif italic text-slate-700">{symbol}</span>
       </div>
       <div className="mt-1 font-mono text-lg font-semibold text-sky-700">
         {value}

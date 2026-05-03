@@ -15,7 +15,7 @@ Last updated: 2026-05-02
 - **Phase 1 answer reveal too fast** — Students get the right answer instantly after entering a wrong answer, defeating pedagogical purpose. Needs smarter feedback mechanism that guides without giving away the answer.
 
 ## 🔧 Refactoring / Tech Debt
-- 
+- [ ] Migrate `HookesLov` and `SkraatKast` to `SimulationFrame` — Both sims still inline their own `SliderField`, canvas wrapper, and (Hookes only) `Stat` row. The scaffold in [src/components/sims/SimulationFrame.tsx](src/components/sims/SimulationFrame.tsx) absorbs all of that; `TemplateForsog.tsx` is the reference for the migration pattern.
 
 ## 📚 Documentation
 - 

@@ -15,6 +15,7 @@ interface LabPageContentProps {
 
 export default function LabPageContent({ lab, accent }: LabPageContentProps) {
   const [expandBackground, setExpandBackground] = useState(true);
+  const [expandSimulation, setExpandSimulation] = useState(false);
 
   return (
     <>
@@ -87,6 +88,26 @@ export default function LabPageContent({ lab, accent }: LabPageContentProps) {
             </section>
           ) : null}
         </>
+      )}
+
+      {/* Simulation dropdown — placeholder slot above the lab guide */}
+      {lab.guide && (
+        <div className="mt-10">
+          <button
+            onClick={() => setExpandSimulation(!expandSimulation)}
+            className="flex w-full items-center gap-2 rounded-xl border border-slate-200 bg-white p-4 text-left hover:bg-slate-50"
+          >
+            <span className="text-lg">{expandSimulation ? "▼" : "▶"}</span>
+            <span className="font-semibold text-slate-900">
+              {expandSimulation ? "Skjul" : "Vis"} simulation
+            </span>
+          </button>
+          {expandSimulation && (
+            <div className="mt-4">
+              <Simulation simulationId={lab.simulationId} />
+            </div>
+          )}
+        </div>
       )}
 
       {/* Plain simulation section — only when there's no guide */}

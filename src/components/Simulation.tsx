@@ -20,6 +20,10 @@ const sims: Record<string, ComponentType> = {
     ssr: false,
     loading: SimulationLoading,
   }),
+  "template-forsog": dynamic(() => import("./sims/TemplateForsog"), {
+    ssr: false,
+    loading: SimulationLoading,
+  }),
 };
 
 export function Simulation({ simulationId }: { simulationId?: string }) {

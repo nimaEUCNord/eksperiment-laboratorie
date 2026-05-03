@@ -18,6 +18,7 @@ export const templateForsog: LabConfig = {
     "Tyngdeacceleration som hældning",
   ],
   keyEquation: "F_t = m \\cdot g",
+  simulationId: "template-forsog",
   theory: [
     "Når en genstand påvirkes af tyngdekraften, oplever den en kraft kaldet tyngdekraften eller vægten. Denne kraft er direkte proportional med genstandes masse. Proportionalitetskonstanten er tyngdeaccelerationen (ca. 9,82 m/s²). Med andre ord: hvis du fordobler massen, fordobles også tyngdekraften.",
     "Når du plotter en graf med masse på x-aksen og kraft på y-aksen, vil datapunkterne ligge på en ret linje gennem oprindelsen. Linjens hældning svarer præcis til tyngdeaccelerationen. Ved at måle masser og deres tilhørende kræfter kan du altså eksperimentelt bestemme tyngdeaccelerationen fra hældningen af din bedste-fit-linje.",
