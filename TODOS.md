@@ -9,7 +9,7 @@ Last updated: 2026-05-02
 - [ ] Phase 3 data export to Excel — Add button in Phase 3 to export measurement data, constants, and metadata to a well-structured Excel file (includes headers, data, calculated values) 
 
 ## 💡 Ideas (Backlog)
-- 
+- [ ] Possible removal of Tyngdekraft box in `TemplateForsog` — Students can already read the force value from the dynamometer pointer; the stat box may be redundant. Decide whether to keep it as a learning aid or remove it to push students to read the instrument. See `LAB_CONFIG.stats.force` and the `stats` callback in [src/components/sims/TemplateForsog.tsx](src/components/sims/TemplateForsog.tsx).
 
 ## 🐛 Known Issues / Bugs
 - **Phase 1 answer reveal too fast** — Students get the right answer instantly after entering a wrong answer, defeating pedagogical purpose. Needs smarter feedback mechanism that guides without giving away the answer.

@@ -6,10 +6,12 @@ import {
   type Sketch,
   type SketchProps,
 } from "@p5-wrapper/react";
+import { Equation } from "../Equation";
 
 export type SliderConfig = {
   key: string;
   label: string;
+  symbol?: string;
   unit: string;
   min: number;
   max: number;
@@ -110,7 +112,9 @@ function Stat({ symbol, label, value }: StatConfig) {
     <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
       <div className="flex items-baseline gap-1 text-sm text-slate-600">
         <span>{label},</span>
-        <span className="font-serif italic text-slate-700">{symbol}</span>
+        <span className="text-slate-700">
+          <Equation latex={symbol} />
+        </span>
       </div>
       <div className="mt-1 font-mono text-lg font-semibold text-sky-700">
         {value}
@@ -162,7 +166,14 @@ function SliderField({
   return (
     <label className="block">
       <div className="mb-1.5 flex items-baseline justify-between">
-        <span className="text-sm font-medium text-slate-700">{slider.label}</span>
+        <span className="flex items-baseline gap-1 text-sm font-medium text-slate-700">
+          <span>{slider.label}</span>
+          {slider.symbol && (
+            <span className="text-slate-600">
+              <Equation latex={slider.symbol} />
+            </span>
+          )}
+        </span>
         <span className="font-mono text-sm font-semibold text-sky-700">
           {value.toFixed(slider.decimals)} {slider.unit}
         </span>

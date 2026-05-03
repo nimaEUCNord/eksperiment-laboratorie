@@ -7,22 +7,55 @@ import {
 } from "@p5-wrapper/react";
 import { SimulationFrame } from "./SimulationFrame";
 
+// LAB PARAMETERS — edit these before a lab.
+// Drawing constants live below; keep them as-is unless adjusting the canvas layout.
+const LAB_CONFIG = {
+  // Tyngdeacceleration (m/s²)
+  g: 9.82,
+
+  // Massevælger (slider) — værdier i kg
+  mass: {
+    label: "Masse",
+    symbol: "m",
+    unit: "kg",
+    min: 0,
+    max: 0.100,
+    step: 0.001,
+    decimals: 3,
+    default: 0.0,
+  },
+
+  // Dynamometer (dropdown) — værdier i N
+  dynamometer: {
+    label: "Dynamometer",
+    options: [0.1, 0.5, 1, 2, 5, 10, 50],
+    default: 50,
+  },
+
+  // Stat-bokse vist under kanvasset
+  stats: {
+    mass: { label: "Masse", symbol: "m" },
+    g: { label: "Tyngdeacc.", symbol: "g" },
+    force: { label: "Tyngdekraft", symbol: "F_t" },
+  },
+};
+
 type TemplateProps = SketchProps & {
-  massGrams: number;
+  massKg: number;
   dynMaxN: number;
 };
 
 const W = 480;
 const H = 460;
-const G = 9.82;
+const G = LAB_CONFIG.g;
 const BRACKET_Y = 30;
 const METER_TOP = 50;
-const METER_H = 170;
+const METER_H = 320;
 const METER_W = 76;
 const HOOK_LEN = 24;
 
 const sketch: Sketch<TemplateProps> = (p5) => {
-  let massGrams = 10;
+  let massKg = 0.2;
   let dynMaxN = 2;
 
   p5.setup = () => {
@@ -30,7 +63,7 @@ const sketch: Sketch<TemplateProps> = (p5) => {
   };
 
   p5.updateWithProps = (props) => {
-    if (props.massGrams !== undefined) massGrams = props.massGrams;
+    if (props.massKg !== undefined) massKg = props.massKg;
     if (props.dynMaxN !== undefined) dynMaxN = props.dynMaxN;
   };
 
@@ -38,27 +71,24 @@ const sketch: Sketch<TemplateProps> = (p5) => {
     p5.background(248, 250, 252);
 
     drawBracket(p5);
-    drawDynamometer(p5, massGrams, dynMaxN);
+    drawDynamometer(p5, massKg, dynMaxN);
 
     const meterBottom = METER_TOP + METER_H;
     const hookTop = meterBottom;
     const hookBottom = hookTop + HOOK_LEN;
     drawHook(p5, hookTop, hookBottom);
 
-    drawWeight(p5, hookBottom, massGrams);
-
-    drawForceArrow(p5, hookBottom, massGrams, dynMaxN);
+    drawWeight(p5, hookBottom, massKg);
   };
 };
 
 function getTickConfig(maxN: number) {
-  if (maxN <= 0.1) return { minor: 0.01, major: 0.05, decimals: 2 };
-  if (maxN <= 0.5) return { minor: 0.05, major: 0.1, decimals: 1 };
-  if (maxN <= 1) return { minor: 0.1, major: 0.5, decimals: 1 };
-  if (maxN <= 2) return { minor: 0.2, major: 1, decimals: 0 };
-  if (maxN <= 5) return { minor: 0.5, major: 1, decimals: 0 };
-  if (maxN <= 10) return { minor: 1, major: 5, decimals: 0 };
-  return { minor: 5, major: 10, decimals: 0 };
+  // identical layout for every range: 5 major intervals + 4 subticks per major.
+  // The labels differ — that's the point: a more sensitive meter buys precision, not more marks.
+  const major = maxN / 5;
+  const minor = major / 5;
+  const decimals = major >= 1 ? 0 : major >= 0.1 ? 1 : major >= 0.01 ? 2 : 3;
+  return { minor, major, decimals };
 }
 
 function formatDanish(n: number, decimals: number) {
@@ -82,7 +112,7 @@ function drawBracket(p5: P5CanvasInstance<TemplateProps>) {
 
 function drawDynamometer(
   p5: P5CanvasInstance<TemplateProps>,
-  massGrams: number,
+  massKg: number,
   dynMaxN: number,
 ) {
   const cx = W / 2;
@@ -148,15 +178,17 @@ function drawDynamometer(
     }
   }
 
-  // unit label near the top of the scale
+  // unit label centered in the top cap
   p5.noStroke();
-  p5.fill(100, 116, 139);
-  p5.textSize(9);
-  p5.textAlign(p5.LEFT, p5.BOTTOM);
-  p5.text("N", tickX + 12, scaleTop - 2);
+  p5.fill(255);
+  p5.textSize(14);
+  p5.textStyle(p5.BOLD);
+  p5.textAlign(p5.CENTER, p5.CENTER);
+  p5.text("N", cx, top + capH / 2);
+  p5.textStyle(p5.NORMAL);
 
   // pointer indicator (red disc) — clamped to scale range
-  const force = (massGrams / 1000) * G;
+  const force = massKg * G;
   const clamped = Math.min(force, dynMaxN);
   const overflow = force > dynMaxN;
   const pointerY = scaleTop + (clamped / dynMaxN) * scaleLen;
@@ -183,15 +215,6 @@ function drawDynamometer(
     p5.textStyle(p5.NORMAL);
   }
 
-  // brand label on the body
-  p5.fill(100, 116, 139);
-  p5.textFont("sans-serif");
-  p5.textSize(8);
-  p5.textAlign(p5.CENTER, p5.CENTER);
-  p5.textStyle(p5.BOLD);
-  const rangeLabel = formatDanish(dynMaxN, dynMaxN < 1 ? 1 : 0);
-  p5.text(`DYNAMOMETER ${rangeLabel} N`, cx, top + capH + 4 + 6);
-  p5.textStyle(p5.NORMAL);
 }
 
 function drawHook(
@@ -210,13 +233,13 @@ function drawHook(
 function drawWeight(
   p5: P5CanvasInstance<TemplateProps>,
   hookBottom: number,
-  massGrams: number,
+  massKg: number,
 ) {
   const cx = W / 2;
-  // weight stack: one block per 100 g (rounded), capped visually
-  const blocks = Math.max(1, Math.round(massGrams / 100));
+  // weight stack: one block per 0.1 kg (rounded), capped visually
+  const blocks = Math.ceil(massKg * 10);
   const visibleBlocks = Math.min(blocks, 10);
-  const blockH = 18;
+  const blockH = 36;
   const blockW = 80;
   const stackTop = hookBottom + 4;
 
@@ -237,17 +260,19 @@ function drawWeight(
     p5.rect(cx - blockW / 2 + 4, y + 3, blockW - 8, 4, 2);
   }
 
-  // mass label on the stack
-  p5.noStroke();
-  p5.fill(255);
-  p5.textAlign(p5.CENTER, p5.CENTER);
-  p5.textStyle(p5.BOLD);
-  p5.textSize(13);
-  p5.text(
-    `${massGrams} g`,
-    cx,
-    stackTop + (visibleBlocks * blockH) / 2,
-  );
+  // mass label on the stack — only when there are blocks to label
+  if (visibleBlocks > 0) {
+    p5.noStroke();
+    p5.fill(255);
+    p5.textAlign(p5.CENTER, p5.CENTER);
+    p5.textStyle(p5.BOLD);
+    p5.textSize(13);
+    p5.text(
+      `${formatDanish(massKg, LAB_CONFIG.mass.decimals)} ${LAB_CONFIG.mass.unit}`,
+      cx,
+      stackTop + (visibleBlocks * blockH) / 2,
+    );
+  }
   p5.textStyle(p5.NORMAL);
 
   if (blocks > visibleBlocks) {
@@ -261,69 +286,30 @@ function drawWeight(
   }
 }
 
-function drawForceArrow(
-  p5: P5CanvasInstance<TemplateProps>,
-  hookBottom: number,
-  massGrams: number,
-  dynMaxN: number,
-) {
-  const cx = W / 2;
-  const blocks = Math.max(1, Math.round(massGrams / 100));
-  const visibleBlocks = Math.min(blocks, 10);
-  const blockH = 18;
-  const stackBottom = hookBottom + 4 + visibleBlocks * blockH;
-
-  // F_t arrow downward, length scales with force
-  const force = (massGrams / 1000) * G;
-  const ARROW_MAX = 70;
-  const arrowLen = Math.min((force / dynMaxN) * ARROW_MAX, ARROW_MAX);
-  if (arrowLen < 4) return;
-
-  const ax = cx + 80;
-  const ayTop = stackBottom - 12;
-  const ayBottom = ayTop + arrowLen;
-  p5.stroke(15, 23, 42);
-  p5.strokeWeight(2.5);
-  p5.line(ax, ayTop, ax, ayBottom);
-  p5.noStroke();
-  p5.fill(15, 23, 42);
-  p5.triangle(ax, ayBottom, ax - 5, ayBottom - 8, ax + 5, ayBottom - 8);
-  p5.textAlign(p5.LEFT, p5.CENTER);
-  p5.textStyle(p5.ITALIC);
-  p5.textSize(12);
-  p5.text("F", ax + 8, (ayTop + ayBottom) / 2);
-  p5.textStyle(p5.NORMAL);
-  p5.textSize(9);
-  p5.text("t", ax + 16, (ayTop + ayBottom) / 2 + 4);
-}
 
 const sliders = [
   {
-    key: "massGrams",
-    label: "Masse m",
-    unit: "g",
-    min: 50,
-    max: 1000,
-    step: 50,
-    decimals: 0,
-    default: 200,
+    key: "massKg",
+    label: LAB_CONFIG.mass.label,
+    symbol: LAB_CONFIG.mass.symbol,
+    unit: LAB_CONFIG.mass.unit,
+    min: LAB_CONFIG.mass.min,
+    max: LAB_CONFIG.mass.max,
+    step: LAB_CONFIG.mass.step,
+    decimals: LAB_CONFIG.mass.decimals,
+    default: LAB_CONFIG.mass.default,
   },
 ];
 
 const selects = [
   {
     key: "dynMaxN",
-    label: "Dynamometer",
-    options: [
-      { value: 0.1, label: "0,1 N" },
-      { value: 0.5, label: "0,5 N" },
-      { value: 1, label: "1 N" },
-      { value: 2, label: "2 N" },
-      { value: 5, label: "5 N" },
-      { value: 10, label: "10 N" },
-      { value: 50, label: "50 N" },
-    ],
-    default: 2,
+    label: LAB_CONFIG.dynamometer.label,
+    options: LAB_CONFIG.dynamometer.options.map((value) => ({
+      value,
+      label: `${value < 1 ? formatDanish(value, 1) : value} N`,
+    })),
+    default: LAB_CONFIG.dynamometer.default,
   },
 ];
 
@@ -334,27 +320,18 @@ export default function TemplateForsog() {
       sliders={sliders}
       selects={selects}
       buildSketchProps={(v) => ({
-        massGrams: v.massGrams,
+        massKg: v.massKg,
         dynMaxN: v.dynMaxN,
       })}
       stats={(v) => {
-        const force = (v.massGrams / 1000) * G;
+        const force = v.massKg * G;
         return [
           {
-            symbol: "m",
-            label: "Masse",
-            value: `${v.massGrams.toFixed(0)} g`,
+            ...LAB_CONFIG.stats.mass,
+            value: `${v.massKg.toFixed(LAB_CONFIG.mass.decimals)} ${LAB_CONFIG.mass.unit}`,
           },
-          {
-            symbol: "g",
-            label: "Tyngdeacc.",
-            value: `${G.toFixed(2)} m/s²`,
-          },
-          {
-            symbol: "F",
-            label: "Tyngdekraft",
-            value: `${force.toFixed(2)} N`,
-          },
+          { ...LAB_CONFIG.stats.g, value: `${G.toFixed(2)} m/s²` },
+          { ...LAB_CONFIG.stats.force, value: `${force.toFixed(2)} N` },
         ];
       }}
     />
