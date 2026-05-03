@@ -12,6 +12,7 @@ export interface PersistedLabGuideState {
   materialsChecked: boolean[];
   setupChecked: boolean[];
   rows: Record<string, string>[];
+  constants: Record<string, string>;
   studentValue: string;
   reflections: string[];
   mode: 'guidet' | 'semi' | 'open';

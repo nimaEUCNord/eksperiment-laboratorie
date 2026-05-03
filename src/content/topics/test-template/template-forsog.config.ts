@@ -13,6 +13,10 @@ export const templateForsoegConfig: LabGuideConfig = {
   hypothesisPlaceholder: "Det forventes, at ... og at hældningstallet bliver ...",
   validateVariableInputs: true,
   blockOnWrongVariableInputs: false,
+  blockOnMissingConstants: true,
+  bypassLocks: true,
+  minMeasurements: 4,
+  suggestedMeasurements: 6,
   variables: [
     {
       name: "Uafhængig variabel",

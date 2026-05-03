@@ -3,7 +3,7 @@ export type Variable = {
   type: "independent" | "dependent" | "control" | "derived";
   unit?: string;
   description?: string;
-  expectedPhysicalQuantity?: string;
+  expectedPhysicalQuantity?: string | string[];
   expectedSymbol?: string | string[];
   expectedUnit?: string | string[];
 };
@@ -27,8 +27,14 @@ export type LabGuideConfig = {
   facit?: string;
   validateVariableInputs?: boolean;
   blockOnWrongVariableInputs?: boolean;
+  blockOnMissingConstants?: boolean;
+  requireAllMaterialsChecked?: boolean;
   materials?: string[];
   materialImages?: Record<string, unknown>;
+  bypassLocks?: boolean;
+  dataCollectionGuidance?: string;
+  minMeasurements?: number;
+  suggestedMeasurements?: number;
 };
 
 export type Lab = {

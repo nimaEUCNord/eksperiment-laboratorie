@@ -1,10 +1,23 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+
+// Hide number input spinners and prevent scroll behavior
+const styles = `
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+`;
 import Image from "next/image";
 import type { Lab, LabGuideConfig } from "@/content/types";
 import type { AccentClasses } from "@/lib/accent";
 import HintBox from "./HintBox";
+import { Equation } from "./Equation";
 import { useLabGuidePersistence } from "@/hooks/useLabGuidePersistence";
 
 type Mode = "guidet" | "semi" | "open";
@@ -49,16 +62,25 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
   const [validatedFields, setValidatedFields] = useState<Record<string, Set<'fysiskStorrelse' | 'symbol' | 'enhed'>>>({});
 
   // Phase 2 state
-  const [materialsChecked, setMaterialsChecked] = useState<boolean[]>([]);
+  const [materialsChecked, setMaterialsChecked] = useState<boolean[]>(() =>
+    Array.from({ length: config.materials?.length || 0 }, () => false)
+  );
   const [setupChecked, setSetupChecked] = useState<boolean[]>([false, false, false, false, false]);
   const [hoveredMaterialIdx, setHoveredMaterialIdx] = useState<number | null>(null);
 
   // Phase 3 state (data collection)
   const [rows, setRows] = useState<Row[]>(() =>
-    Array.from({ length: 6 }, () =>
-      (config.measurementFields || []).reduce((acc, field) => ({ ...acc, [field.label]: "" }), {})
-    )
+    Array.from({ length: config.suggestedMeasurements || 6 }, () => {
+      const measVars = config.variables?.filter(v => v.type === "independent" || v.type === "dependent") || [];
+      return measVars.reduce((acc, v) => ({ ...acc, [v.name]: "" }), {});
+    })
   );
+
+  // Phase 3 state (constants)
+  const [constants, setConstants] = useState<Record<string, string>>(() => {
+    const controlVars = config.variables?.filter(v => v.type === "control") || [];
+    return controlVars.reduce((acc, v) => ({ ...acc, [v.name]: "" }), {});
+  });
 
   // Phase 4 state
   const [studentValue, setStudentValue] = useState("");
@@ -91,6 +113,7 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
       if (restored.materialsChecked) setMaterialsChecked(restored.materialsChecked);
       if (restored.setupChecked) setSetupChecked(restored.setupChecked);
       if (restored.rows) setRows(restored.rows);
+      if (restored.constants) setConstants(restored.constants);
       if (restored.studentValue) setStudentValue(restored.studentValue);
       if (restored.reflections) setReflections(restored.reflections);
       setShowRestoreNotification(true);
@@ -110,13 +133,15 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
       materialsChecked,
       setupChecked,
       rows,
+      constants,
       studentValue,
       reflections,
       mode: mode || 'guidet',
     });
-  }, [hasRestored, hypothesis, varInputs, validationErrors, validatedFields, materialsChecked, setupChecked, rows, studentValue, reflections, mode, phase, persistence]);
+  }, [hasRestored, hypothesis, varInputs, validationErrors, validatedFields, materialsChecked, setupChecked, rows, constants, studentValue, reflections, mode, phase, persistence]);
 
   const phaseIndex = (p: Phase) => (p === "choose" ? -1 : (p as number) - 1);
+  const isPhaseChoosing = (p: Phase): p is "choose" => p === "choose";
 
   // Validation helper: check if student answer matches expected value(s)
   const checkAnswer = (studentAnswer: string, expectedValue: string | string[] | undefined, isCaseSensitive: boolean): boolean => {
@@ -211,22 +236,104 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
     }
   };
 
+  const controlVars = useMemo(
+    () => config.variables?.filter((v) => v.type === "control") || [],
+    [config.variables]
+  );
+
+  const allConstantsFilled = useMemo(() => {
+    return controlVars.every((v) => {
+      const val = constants[v.name];
+      return val !== undefined && val !== "";
+    });
+  }, [constants, controlVars]);
+
   const validRows = useMemo(() => {
+    const measVars = config.variables?.filter((v) => v.type === "independent" || v.type === "dependent") || [];
     return rows.filter((row) => {
-      const measurementFields = config.measurementFields || [];
-      return measurementFields.some((field) => {
-        const val = parseFloat(row[field.label]);
+      return measVars.some((v) => {
+        const val = parseFloat(row[v.name]);
         return Number.isFinite(val) && val > 0;
       });
     });
-  }, [rows, config.measurementFields]);
+  }, [rows, config.variables]);
 
-  const canProceedToPhase4 = validRows.length >= 4;
+  // Check actual progression conditions (for checkmark display - independent of bypassLocks)
+  const checkPhase1Conditions = () => {
+    if (!hypothesis.trim()) return false;
+    // TODO: Add configurable keyword validation for hypothesis (see TODOS.md)
+    if (!config.validateVariableInputs) return true;
+    if (!config.blockOnWrongVariableInputs) return true;
+    return Object.keys(validationErrors).length === 0 || !Object.values(validationErrors).some((e) => Object.values(e).some((v) => v));
+  };
+
+  const checkPhase2Conditions = () => {
+    if (config.requireAllMaterialsChecked) {
+      // If requireAllMaterialsChecked is true, all materials and all setup items must be checked
+      // Ensure arrays have content AND all items are checked (not just vacuously true for empty arrays)
+      const allMaterialsChecked = materialsChecked.length > 0 && materialsChecked.every((checked) => checked);
+      const allSetupChecked = setupChecked.every((checked) => checked);
+      return allMaterialsChecked && allSetupChecked;
+    }
+    // Default: at least some materials or setup items must be checked (setup initiated)
+    return materialsChecked.some((checked) => checked) || setupChecked.some((checked) => checked);
+  };
+
+  const checkPhase3Conditions = () => {
+    const validRows = rows.filter((row) => {
+      const values = Object.values(row);
+      return values.every((v) => v.trim() !== "");
+    });
+    const allConstantsFilled = Object.values(constants).every((c) => c.trim() !== "");
+    return validRows.length >= (config.minMeasurements || 4) && (config.blockOnMissingConstants !== false ? allConstantsFilled : true);
+  };
+
+  const checkPhase4Conditions = () => {
+    // Phase 4 requires student to have entered a value
+    return studentValue.trim() !== "";
+  };
+
+  // Determine if phase is completed (for checkmark display)
+  const isPhaseCompleted = (phaseNum: number): boolean => {
+    switch (phaseNum) {
+      case 1: return checkPhase1Conditions();
+      case 2: return checkPhase2Conditions();
+      case 3: return checkPhase3Conditions();
+      case 4: return checkPhase4Conditions();
+      default: return false;
+    }
+  };
+
+  // Determine if button should be enabled (bypassLocks allows skipping requirements)
+  const canProceedFromPhase = (phaseNum: number): boolean => {
+    if (config.bypassLocks) return true;
+    return isPhaseCompleted(phaseNum);
+  };
+
+  const canProceedToPhase4 = config.bypassLocks || (validRows.length >= (config.minMeasurements || 4) && (config.blockOnMissingConstants !== false ? allConstantsFilled : true));
 
   const updateRow = (i: number, field: string, value: string) => {
     setRows((prev) =>
       prev.map((r, idx) => (idx === i ? { ...r, [field]: value } : r))
     );
+  };
+
+  const addRow = () => {
+    const measVars = config.variables?.filter(v => v.type === "independent" || v.type === "dependent") || [];
+    const newRow = measVars.reduce((acc, v) => ({ ...acc, [v.name]: "" }), {});
+    setRows((prev) => [...prev, newRow]);
+  };
+
+  const handleNumberInputWheel = (e: React.WheelEvent<HTMLInputElement>) => {
+    e.currentTarget.blur();
+  };
+
+  const removeRow = (i: number) => {
+    setRows((prev) => prev.filter((_, idx) => idx !== i));
+  };
+
+  const updateConstant = (variableName: string, value: string) => {
+    setConstants((prev) => ({ ...prev, [variableName]: value }));
   };
 
   const toggleHint = (id: string) => {
@@ -261,9 +368,13 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
     setValidatedFields({});
     setMaterialsChecked([]);
     setSetupChecked([false, false, false, false, false]);
-    setRows(Array.from({ length: 6 }, () =>
-      (config.measurementFields || []).reduce((acc, field) => ({ ...acc, [field.label]: "" }), {})
-    ));
+    setRows(Array.from({ length: config.suggestedMeasurements || 6 }, () => {
+      const measVars = config.variables?.filter(v => v.type === "independent" || v.type === "dependent") || [];
+      return measVars.reduce((acc, v) => ({ ...acc, [v.name]: "" }), {});
+    }));
+    setConstants(
+      (config.variables?.filter(v => v.type === "control") || []).reduce((acc, v) => ({ ...acc, [v.name]: "" }), {})
+    );
     setStudentValue("");
     setReflections(Array.from({ length: config.reflectionQuestions?.length || 0 }, () => ""));
     setShowFacit(false);
@@ -320,6 +431,7 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
 
   return (
     <div>
+      <style>{styles}</style>
       <h2 className="text-xl font-semibold text-slate-900">Laboratorieguide</h2>
 
       {showRestoreNotification && (
@@ -338,10 +450,18 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
       <div className="mt-4 flex items-center gap-0">
         {PHASES.map((p, i) => {
           const active = phaseIndex(phase) === i;
-          const done = phaseIndex(phase) > i;
+          const shouldDisableButton = isPhaseChoosing(phase) && i > 0;
+
+          // Check if phase progression condition is satisfied (for checkmark)
+          const done = isPhaseCompleted(i + 1);
+
           return (
             <div key={String(p.key)} className="flex items-center">
-              <div className="flex flex-col items-center">
+              <button
+                onClick={() => setPhase(p.key)}
+                className="flex flex-col items-center cursor-pointer hover:opacity-80 transition-opacity"
+                disabled={shouldDisableButton}
+              >
                 <div
                   className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold transition-colors ${
                     active || done ? `${accent.bg} text-white` : "bg-slate-200 text-slate-500"
@@ -354,10 +474,10 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
                 >
                   {p.label}
                 </span>
-              </div>
+              </button>
               {i < PHASES.length - 1 && (
                 <div
-                  className={`mb-4 h-0.5 w-6 sm:w-12 ${currentIdx > i ? accent.bg : "bg-slate-200"}`}
+                  className={`mb-4 h-0.5 w-6 sm:w-12 ${done ? accent.bg : "bg-slate-200"}`}
                 />
               )}
             </div>
@@ -553,10 +673,10 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
             <button
               onClick={() => {
                 const isValid = validateVariableInputs();
-                if (!isValid && config.blockOnWrongVariableInputs) return;
+                if (!isValid && config.blockOnWrongVariableInputs && !config.bypassLocks) return;
                 setPhase(2);
               }}
-              disabled={config.validateVariableInputs && config.blockOnWrongVariableInputs && Object.keys(validationErrors).length > 0 && Object.values(validationErrors).some((e) => Object.values(e).some((v) => v))}
+              disabled={!config.bypassLocks && config.validateVariableInputs && config.blockOnWrongVariableInputs && Object.keys(validationErrors).length > 0 && Object.values(validationErrors).some((e) => Object.values(e).some((v) => v))}
               className={`rounded-xl px-6 py-2.5 text-sm font-medium text-white ${accent.bg} disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               Næste fase →
@@ -701,78 +821,153 @@ export default function GenericLabGuide({ lab, config, accent }: GenericLabGuide
       {phase === 3 && (
         <div className="mt-8 space-y-6">
           <h3 className="text-lg font-semibold text-slate-900">Fase 3 — Mål</h3>
+          {/* TODO: Add Excel export button for measurement data (see TODOS.md) */}
 
           {mode === "guidet" && (
             <div className={`rounded-xl border ${accent.border} ${accent.bgSoft} p-4 text-sm text-slate-700`}>
               <p className="font-medium text-slate-800">Dataindsamling:</p>
               <p className="mt-2 text-slate-600">
-                Indsaml mindst 4-6 målinger. Hvis et felt kan beregnes automatisk, udfyldes det af sig selv.
+                {config.dataCollectionGuidance || `Indsaml mindst ${config.minMeasurements || 4}${config.suggestedMeasurements ? `-${config.suggestedMeasurements}` : ""} målinger. Hvis et felt kan beregnes automatisk, udfyldes det af sig selv.`}
               </p>
             </div>
           )}
 
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-sm">
-              <thead>
-                <tr className={`${accent.bgSoft}`}>
-                  {config.measurementFields?.map((field, idx) => {
-                    // Try to use student-entered symbol and unit for measurement columns
-                    let headerLabel = field.label;
-                    let headerUnit = field.unit;
-
-                    if (config.variables && idx < config.variables.length) {
-                      const variable = config.variables[idx];
-                      const varInput = varInputs[variable.name];
-                      if (varInput?.symbol) {
-                        headerLabel = varInput.symbol;
-                        if (varInput.enhed) {
-                          headerUnit = varInput.enhed;
-                        }
-                      }
-                    }
+          {controlVars.length > 0 && (
+            <div>
+              <p className="mb-2 text-sm font-medium text-slate-700">Konstanter:</p>
+              <table className="w-full border-collapse text-sm">
+                <tbody>
+                  {controlVars.map((variable) => {
+                    const varInput = varInputs[variable.name];
+                    const physicalQuantity =
+                      varInput?.fysiskStorrelse || "Fysisk størrelse";
+                    const symbol = varInput?.symbol || "Symbol";
+                    const unit = varInput?.enhed || "enhed";
 
                     return (
-                      <th key={field.label} className="border border-slate-200 px-3 py-2 text-left font-medium text-slate-700">
-                        {headerLabel} ({headerUnit})
-                      </th>
+                      <tr key={variable.name}>
+                        <td className={`bg-slate-50 border border-slate-200 px-3 py-2 text-slate-700 font-medium`}>
+                          <div className="flex flex-col gap-y-0.5">
+                            <div>{physicalQuantity}</div>
+                            <div className="text-slate-600 text-sm">
+                              <Equation latex={symbol} fallback={<span className="italic">{symbol}</span>} /> (
+                              <Equation latex={`\\mathrm{${unit}}`} fallback={<span>{unit}</span>} />)
+                            </div>
+                          </div>
+                        </td>
+                        <td className="border border-slate-200 px-3 py-2">
+                          <input
+                            type="number"
+                            value={constants[variable.name] || ""}
+                            onChange={(e) =>
+                              updateConstant(variable.name, e.target.value)
+                            }
+                            onWheel={handleNumberInputWheel}
+                            placeholder="–"
+                            className="w-full border-none bg-transparent p-0 text-slate-800 placeholder:text-slate-400 focus:outline-none"
+                          />
+                        </td>
+                      </tr>
                     );
                   })}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          <div>
+            <p className="mb-2 text-sm font-medium text-slate-700">Målinger:</p>
+            <table className="w-full border-collapse text-sm">
+              <thead>
+                <tr className="bg-slate-50">
+                  {config.variables
+                    ?.filter((v) => v.type === "independent" || v.type === "dependent")
+                    .map((variable) => {
+                      // Determine physical quantity and symbol from Phase 1 input
+                      const varInput = varInputs[variable.name];
+                      const physicalQuantity =
+                        varInput?.fysiskStorrelse || "Fysisk størrelse";
+                      const symbol = varInput?.symbol || "Symbol";
+                      const unit = varInput?.enhed || "enhed";
+
+                      return (
+                        <th
+                          key={variable.name}
+                          className="border border-slate-200 px-3 py-2 text-center font-medium text-slate-700"
+                        >
+                          <div className="flex flex-col gap-y-0.5">
+                            <div>{physicalQuantity}</div>
+                            <div className="text-slate-600 text-sm">
+                              <Equation latex={symbol} fallback={<span className="italic">{symbol}</span>} /> (
+                              <Equation latex={`\\mathrm{${unit}}`} fallback={<span>{unit}</span>} />)
+                            </div>
+                          </div>
+                        </th>
+                      );
+                    })}
+                  <th className="border border-slate-200 px-3 py-2 text-center font-medium text-slate-700 w-8"></th>
                 </tr>
               </thead>
               <tbody>
                 {rows.map((row, i) => (
                   <tr key={i}>
-                    {config.measurementFields?.map((field) => {
-                      const isAuto = field.autoCalculate;
-                      const value = row[field.label];
-                      return (
-                        <td key={field.label} className="border border-slate-200 px-3 py-2">
-                          {isAuto ? (
-                            <span className="text-slate-500">{value || "–"}</span>
-                          ) : (
+                    {config.variables
+                      ?.filter((v) => v.type === "independent" || v.type === "dependent")
+                      .map((variable) => {
+                        const value = row[variable.name];
+                        return (
+                          <td
+                            key={variable.name}
+                            className="border border-slate-200 px-3 py-2"
+                          >
                             <input
                               type="number"
-                              value={value}
-                              onChange={(e) => updateRow(i, field.label, e.target.value)}
+                              value={value || ""}
+                              onChange={(e) =>
+                                updateRow(i, variable.name, e.target.value)
+                              }
+                              onWheel={handleNumberInputWheel}
                               placeholder="–"
                               className="w-full border-none bg-transparent p-0 text-slate-800 placeholder:text-slate-400 focus:outline-none"
                             />
-                          )}
-                        </td>
-                      );
-                    })}
+                          </td>
+                        );
+                      })}
+                    <td className="border border-slate-200 px-3 py-2 text-center">
+                      <button
+                        onClick={() => removeRow(i)}
+                        className="text-slate-400 hover:text-red-500 transition-colors text-sm"
+                        title="Fjern måling"
+                      >
+                        ✕
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
 
+          <button
+            onClick={addRow}
+            className="mt-2 text-sm text-slate-500 hover:text-slate-700 underline"
+          >
+            + Tilføj måling
+          </button>
+
           <div className="text-sm text-slate-600">
             <p>
-              Gyldige målinger: <strong>{validRows.length}</strong> / {rows.length}
+              Gyldige målinger: <strong>{validRows.length}</strong> / {config.suggestedMeasurements || rows.length}
             </p>
-            {!canProceedToPhase4 && (
-              <p className="mt-1 text-amber-600">Indsaml mindst 4 gyldige målinger før næste fase.</p>
+            {!config.bypassLocks && !canProceedToPhase4 && (
+              <div className="mt-1 space-y-1 text-amber-600">
+                {validRows.length < (config.minMeasurements || 4) && (
+                  <p>Indsaml mindst {config.minMeasurements || 4} gyldige målinger før næste fase.</p>
+                )}
+                {controlVars.length > 0 && !allConstantsFilled && config.blockOnMissingConstants !== false && (
+                  <p>Udfyld alle konstanter før næste fase.</p>
+                )}
+              </div>
             )}
           </div>
 
