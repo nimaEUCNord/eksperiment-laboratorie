@@ -67,17 +67,13 @@ export default function LabTemplate({ lab, guide, accent }: LabTemplateProps) {
           )
         );
       case "setup": {
-        if (guide.requireAllMaterialsChecked) {
-          const allMaterialsChecked =
-            state.materialsChecked.length > 0 &&
-            state.materialsChecked.every((c) => c);
-          const allSetupChecked = state.setupChecked.every((c) => c);
-          return allMaterialsChecked && allSetupChecked;
-        }
-        return (
-          state.materialsChecked.some((c) => c) ||
-          state.setupChecked.some((c) => c)
-        );
+        const allMaterialsChecked =
+          state.materialsChecked.length > 0 &&
+          state.materialsChecked.every((c) => c);
+        const allSetupChecked =
+          state.setupChecked.length > 0 &&
+          state.setupChecked.every((c) => c);
+        return allMaterialsChecked && allSetupChecked;
       }
       case "measure": {
         const filledRows = state.rows.filter((row) =>

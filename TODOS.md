@@ -18,7 +18,6 @@ Last updated: 2026-05-02
 - 
 
 ## 📚 Documentation
-- Phase 2 checkmark condition should trigger on ALL materialer and tjekliste boxes — When `requireAllMaterialsChecked: true`, Phase 2 checkmark only shows when ALL materials AND ALL setup items are checked (not partial completion). Ensure this behavior is consistent across all labs using this config.
-- `requireAllMaterialsChecked` should be a on lab by lab basis toggle — Different labs may have different requirements for Phase 2 completion (some require all materials checked, others just require some to be initiated). This is configurable per lab in the LabGuideConfig, allowing flexibility across different experiment types.
+- 
 
 ## ✅ Completed (Archive)

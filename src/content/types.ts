@@ -39,7 +39,6 @@ export type LabGuide = {
   materials?: string[];
   materialImages?: Record<string, StaticImageData>;
   setupItems?: string[];
-  requireAllMaterialsChecked?: boolean;
 
   // Phase 3 — Mål
   minMeasurements?: number;

@@ -17,17 +17,13 @@ export function usePhase2State(
   const toggleHint = (id: string) => dispatch({ type: "toggleHint", id });
 
   const checkConditions = (): boolean => {
-    if (guide.requireAllMaterialsChecked) {
-      const allMaterialsChecked =
-        state.materialsChecked.length > 0 &&
-        state.materialsChecked.every((checked) => checked);
-      const allSetupChecked = state.setupChecked.every((checked) => checked);
-      return allMaterialsChecked && allSetupChecked;
-    }
-    return (
-      state.materialsChecked.some((checked) => checked) ||
-      state.setupChecked.some((checked) => checked)
-    );
+    const allMaterialsChecked =
+      state.materialsChecked.length > 0 &&
+      state.materialsChecked.every((checked) => checked);
+    const allSetupChecked =
+      state.setupChecked.length > 0 &&
+      state.setupChecked.every((checked) => checked);
+    return allMaterialsChecked && allSetupChecked;
   };
 
   return {
