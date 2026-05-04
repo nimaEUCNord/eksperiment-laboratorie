@@ -41,7 +41,6 @@ export default function VariableInputRow({
       <div className="mt-3 grid gap-3 sm:grid-cols-3">
         <Field
           label="Fysisk størrelse"
-          placeholder="fx Kraft"
           value={input.fysiskStorrelse}
           onChange={(val) => onChange("fysiskStorrelse", val)}
           onBlur={() => onBlur("fysiskStorrelse")}
@@ -53,7 +52,6 @@ export default function VariableInputRow({
         />
         <Field
           label="Symbol"
-          placeholder="fx F"
           value={input.symbol}
           onChange={(val) => onChange("symbol", val)}
           onBlur={() => onBlur("symbol")}
@@ -65,7 +63,6 @@ export default function VariableInputRow({
         />
         <Field
           label="Enhed"
-          placeholder="fx N"
           value={input.enhed}
           onChange={(val) => onChange("enhed", val)}
           onBlur={() => onBlur("enhed")}
@@ -82,7 +79,7 @@ export default function VariableInputRow({
 
 interface FieldProps {
   label: string;
-  placeholder: string;
+  placeholder?: string;
   value: string;
   onChange: (v: string) => void;
   onBlur: () => void;
