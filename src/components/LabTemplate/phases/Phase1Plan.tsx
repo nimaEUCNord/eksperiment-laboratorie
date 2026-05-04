@@ -70,12 +70,9 @@ export default function Phase1Plan({
     dispatch({ type: "clearValidatedFields" });
   };
 
-  const advanceHandlerRef = useRef<((t: RealPhase) => void) | null>(null);
+  const advanceHandlerRef = useRef<((t?: RealPhase) => void) | null>(null);
   advanceHandlerRef.current = (targetPhase?: RealPhase) => {
-    const varsOk = phase1.validateAll();
-    const hypOk = phase1.checkHypothesis();
-    if (!varsOk && guide.blockOnWrongVariableInputs && !guide.bypassLocks) return;
-    if (!hypOk && guide.blockOnWrongHypothesis && !guide.bypassLocks) return;
+    if (!canAdvance) return;
     onAdvance(targetPhase);
   };
 
