@@ -59,11 +59,6 @@ export default function Phase1Plan({
 
   const canAdvance = canAdvanceVars && canAdvanceHyp;
 
-  const showHypKeywords =
-    !!guide.hypothesisKeywords?.length &&
-    (phase1.isHypAttemptsExhausted ||
-      (mode === "guidet" && phase1.hypothesisChecked && hypHasError));
-
   const handleSwitchMode = () => {
     dispatch({ type: "setMode", mode: null });
     dispatch({ type: "setPhase", phase: "choose" });
@@ -155,11 +150,7 @@ export default function Phase1Plan({
             ✓ Hypotesen indeholder de forventede nøgleord.
           </p>
         )}
-        {showHypKeywords && (
-          <p className="mt-2 text-xs text-red-500">
-            Forventede nøgleord: {guide.hypothesisKeywords!.map((k) => `"${k}"`).join(", ")}
-          </p>
-        )}
+
       </div>
 
       <div className="flex items-center justify-between">

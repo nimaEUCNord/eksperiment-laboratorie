@@ -12,6 +12,8 @@ Last updated: 2026-05-04
 - [ ] Add graph canvas to Phase 4 (Analysér) — Students should be able to plot their Phase 3 measurements directly in Phase 4 to visually analyse the relationship between variables. Consider using the existing `MeasurementChart` component with the lab's `ChartConfig`.
 
 ## 💡 Ideas (Backlog)
+- [ ] Offline mode — Enable the site to function without internet access (e.g. service worker / PWA caching) so students can run lab guides in classrooms with poor connectivity.
+- [ ] Print lab guide option — Add a print-friendly view of the lab guide (all phases, student answers, results) so students or teachers can produce a paper copy or PDF of completed work.
 - [ ] Possible removal of Tyngdekraft box in `TemplateForsog` — Students can already read the force value from the dynamometer pointer; the stat box may be redundant. Decide whether to keep it as a learning aid or remove it to push students to read the instrument. See `LAB_CONFIG.stats.force` and the `stats` callback in [src/components/sims/TemplateForsog.tsx](src/components/sims/TemplateForsog.tsx).
 
 ## 🐛 Known Issues / Bugs

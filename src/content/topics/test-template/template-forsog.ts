@@ -28,9 +28,10 @@ export const templateForsog: LabConfig = {
     hypothesisPlaceholder: "Fx. Det forventes, at ... og at hældningstallet bliver ...",
     hypothesisKeywords: ["masse", "kraft"],
     hypothesisHints: [
-      "Hvilke to fysiske størrelser undersøger du sammenhængen mellem?",
+      "Hvilke to fysiske størrelser undersøger du sammenhængen mellem? Og hvad forventer du vil ske?",
       "Tænk på hvilken betydning loddet har. Hvad ændrer sig når loddet ændres?",
       "Brug ordene \"masse\" og \"kraft\" i din hypotese, fx \"Det forventes at kraften vil... når... \".",
+      "**placeholderHint**",
     ],
     validateHypothesis: true,
     blockOnWrongHypothesis: true,
