@@ -38,9 +38,10 @@ export interface PhaseProps {
   lab: LabConfig;
   guide: LabGuide;
   accent: AccentClasses;
-  onAdvance: () => void;
+  onAdvance: (targetPhase?: RealPhase) => void;
   onRetreat: () => void;
   onRequestReset: () => void;
+  onRegisterAdvanceHandler: (handler: ((targetPhase: RealPhase) => void) | null) => void;
 }
 
 export const DEFAULT_SETUP_ITEMS = [

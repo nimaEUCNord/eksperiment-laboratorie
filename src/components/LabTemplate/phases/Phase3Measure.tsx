@@ -1,4 +1,5 @@
-import type { PhaseProps } from "../types";
+import { useEffect, useRef } from "react";
+import type { PhaseProps, RealPhase } from "../types";
 import { usePhase3State } from "../hooks/usePhase3State";
 import EmbeddedSim from "../components/EmbeddedSim";
 import VariableHeaderCell from "../components/VariableHeaderCell";
@@ -18,9 +19,21 @@ export default function Phase3Measure({
   onAdvance,
   onRetreat,
   onRequestReset,
+  onRegisterAdvanceHandler,
 }: PhaseProps) {
   const phase3 = usePhase3State(state, dispatch, guide);
   const mode = phase3.mode;
+
+  const advanceHandlerRef = useRef<((t: RealPhase) => void) | null>(null);
+  advanceHandlerRef.current = (targetPhase?: RealPhase) => {
+    if (!phase3.canProceedToPhase4) return;
+    onAdvance(targetPhase);
+  };
+
+  useEffect(() => {
+    onRegisterAdvanceHandler((t) => advanceHandlerRef.current?.(t));
+    return () => onRegisterAdvanceHandler(null);
+  }, [onRegisterAdvanceHandler]);
 
   return (
     <div className="mt-8 space-y-6">

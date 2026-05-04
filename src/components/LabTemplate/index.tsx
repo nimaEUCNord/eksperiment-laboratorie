@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useReducer, useState } from "react";
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import type { LabConfig, LabGuide } from "@/content/types";
 import type { AccentClasses } from "@/lib/accent";
 import { useLabGuidePersistence } from "@/hooks/useLabGuidePersistence";
@@ -53,6 +53,12 @@ export default function LabTemplate({ lab, guide, accent }: LabTemplateProps) {
   }, [hasRestored, state, persistence]);
 
   const goToPhase = (phase: RealPhase) => dispatch({ type: "setPhase", phase });
+
+  const validatedAdvanceHandlerRef = useRef<((t: RealPhase) => void) | null>(null);
+  const onRegisterAdvanceHandler = useCallback(
+    (fn: ((t: RealPhase) => void) | null) => { validatedAdvanceHandlerRef.current = fn; },
+    [],
+  );
 
   const isPhaseCompleted = (phase: RealPhase): boolean => {
     switch (phase) {
@@ -127,13 +133,26 @@ export default function LabTemplate({ lab, guide, accent }: LabTemplateProps) {
     lab,
     guide,
     accent,
-    onAdvance: () => {
-      if (advanceTarget) goToPhase(advanceTarget);
+    onAdvance: (targetPhase?: RealPhase) => {
+      const target = targetPhase ?? advanceTarget;
+      if (target) goToPhase(target);
     },
     onRetreat: () => {
       if (retreatTarget) goToPhase(retreatTarget);
     },
     onRequestReset: () => dispatch({ type: "setShowClearConfirm", value: true }),
+    onRegisterAdvanceHandler,
+  };
+
+  const handleProgressBarSelect = (targetPhase: RealPhase) => {
+    const targetIndex = PHASES.findIndex((p) => p.id === targetPhase);
+    if (targetIndex <= currentIndex) {
+      goToPhase(targetPhase);
+    } else if (validatedAdvanceHandlerRef.current) {
+      validatedAdvanceHandlerRef.current(targetPhase);
+    } else {
+      goToPhase(targetPhase);
+    }
   };
 
   return (
@@ -159,7 +178,7 @@ export default function LabTemplate({ lab, guide, accent }: LabTemplateProps) {
         accent={accent}
         currentPhase={state.phase}
         isPhaseCompleted={isPhaseCompleted}
-        onSelectPhase={goToPhase}
+        onSelectPhase={handleProgressBarSelect}
       />
 
       <PhaseComponent {...phaseProps} />

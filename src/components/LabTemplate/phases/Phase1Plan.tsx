@@ -1,4 +1,5 @@
-import type { PhaseProps } from "../types";
+import { useEffect, useRef } from "react";
+import type { PhaseProps, RealPhase } from "../types";
 import { usePhase1State } from "../hooks/usePhase1State";
 import VariableInputRow from "../components/VariableInputRow";
 import ResetWorkButton from "../components/ResetWorkButton";
@@ -10,6 +11,7 @@ export default function Phase1Plan({
   accent,
   onAdvance,
   onRequestReset,
+  onRegisterAdvanceHandler,
 }: PhaseProps) {
   const phase1 = usePhase1State(state, dispatch, guide);
   const mode = phase1.mode;
@@ -67,13 +69,21 @@ export default function Phase1Plan({
     dispatch({ type: "clearValidatedFields" });
   };
 
-  const handleNext = () => {
+  const advanceHandlerRef = useRef<((t: RealPhase) => void) | null>(null);
+  advanceHandlerRef.current = (targetPhase?: RealPhase) => {
     const varsOk = phase1.validateAll();
     const hypOk = phase1.checkHypothesis();
     if (!varsOk && guide.blockOnWrongVariableInputs && !guide.bypassLocks) return;
     if (!hypOk && guide.blockOnWrongHypothesis && !guide.bypassLocks) return;
-    onAdvance();
+    onAdvance(targetPhase);
   };
+
+  useEffect(() => {
+    onRegisterAdvanceHandler((t) => advanceHandlerRef.current?.(t));
+    return () => onRegisterAdvanceHandler(null);
+  }, [onRegisterAdvanceHandler]);
+
+  const handleNext = () => advanceHandlerRef.current?.();
 
   return (
     <div className="mt-8 space-y-6">
