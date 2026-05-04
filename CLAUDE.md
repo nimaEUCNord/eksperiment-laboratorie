@@ -21,6 +21,8 @@ There is no test runner configured.
 
 A preview launch config is committed at `.claude/launch.json` (named `next-dev`); use it with the preview tooling instead of running `next dev` via Bash. **Do not run `npm run build` while the dev server is running** — they fight over `.next/` and corrupt the cache. Stop the dev server first, or use a separate build directory.
 
+**Verification scope.** When verifying changes via the preview tools (preview_start, preview_snapshot, preview_click, preview_screenshot, etc.), only exercise the skabelon lab at `/emner/test-template/template-forsog`. Do not navigate to or interact with production labs unless the user explicitly asks. The skabelon lab is the canonical reference scaffold; production labs contain finalised student content that should not be poked at during verification.
+
 ## Available skills
 
 - `/design-lab` — Design a new physics lab guide following the 6-phase template; generates a complete `LabConfig` with nested `guide`
