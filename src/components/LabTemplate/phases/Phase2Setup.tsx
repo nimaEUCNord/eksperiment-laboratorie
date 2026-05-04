@@ -12,6 +12,7 @@ export default function Phase2Setup({
   lab,
   guide,
   accent,
+  simKey,
   onAdvance,
   onRetreat,
   onRequestReset,
@@ -51,6 +52,7 @@ export default function Phase2Setup({
         phaseId="opstil"
         simulationId={lab.simulationId}
         embedIn={guide.embedSimulationInPhases ?? []}
+        simKey={simKey}
       />
 
       {guide.materials && (

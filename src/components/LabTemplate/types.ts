@@ -38,6 +38,7 @@ export interface PhaseProps {
   lab: LabConfig;
   guide: LabGuide;
   accent: AccentClasses;
+  simKey: number;
   onAdvance: (targetPhase?: RealPhase) => void;
   onRetreat: () => void;
   onRequestReset: () => void;

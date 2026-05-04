@@ -16,6 +16,7 @@ export default function Phase3Measure({
   lab,
   guide,
   accent,
+  simKey,
   onAdvance,
   onRetreat,
   onRequestReset,
@@ -55,6 +56,7 @@ export default function Phase3Measure({
         phaseId="maal"
         simulationId={lab.simulationId}
         embedIn={guide.embedSimulationInPhases ?? []}
+        simKey={simKey}
       />
 
       {phase3.controlVars.length > 0 && (

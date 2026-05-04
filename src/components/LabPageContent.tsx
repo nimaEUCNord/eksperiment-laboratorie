@@ -16,6 +16,8 @@ interface LabPageContentProps {
 export default function LabPageContent({ lab, accent }: LabPageContentProps) {
   const [expandBackground, setExpandBackground] = useState(!lab.guide);
   const [expandSimulation, setExpandSimulation] = useState(false);
+  const [simKey, setSimKey] = useState(0);
+  const resetSim = () => setSimKey((k) => k + 1);
 
   return (
     <>
@@ -104,7 +106,7 @@ export default function LabPageContent({ lab, accent }: LabPageContentProps) {
           </button>
           {expandSimulation && (
             <div className="mt-4">
-              <Simulation simulationId={lab.simulationId} />
+              <Simulation key={simKey} simulationId={lab.simulationId} resetKey={simKey} />
             </div>
           )}
         </div>
@@ -151,7 +153,13 @@ export default function LabPageContent({ lab, accent }: LabPageContentProps) {
       {/* Lab guide section */}
       {lab.guide && (
         <section className="mt-10">
-          <LabTemplate lab={lab} guide={lab.guide} accent={accent} />
+          <LabTemplate
+            lab={lab}
+            guide={lab.guide}
+            accent={accent}
+            simKey={simKey}
+            onResetSim={resetSim}
+          />
         </section>
       )}
     </>

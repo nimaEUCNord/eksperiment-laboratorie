@@ -11,6 +11,7 @@ export default function Phase4Analyse({
   lab,
   guide,
   accent,
+  simKey,
   onAdvance,
   onRetreat,
   onRequestReset,
@@ -30,6 +31,7 @@ export default function Phase4Analyse({
         phaseId="analyser"
         simulationId={lab.simulationId}
         embedIn={guide.embedSimulationInPhases ?? []}
+        simKey={simKey}
       />
 
       {guide.chart && <MeasurementChart rows={phase4.rows} chart={guide.chart} />}

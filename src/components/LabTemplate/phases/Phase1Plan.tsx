@@ -61,7 +61,8 @@ export default function Phase1Plan({
 
   const showHypKeywords =
     !!guide.hypothesisKeywords?.length &&
-    (mode === "guidet" || phase1.isHypAttemptsExhausted);
+    (phase1.isHypAttemptsExhausted ||
+      (mode === "guidet" && phase1.hypothesisChecked && hypHasError));
 
   const handleSwitchMode = () => {
     dispatch({ type: "setMode", mode: null });

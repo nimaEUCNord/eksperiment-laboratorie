@@ -26,10 +26,16 @@ const sims: Record<string, ComponentType> = {
   }),
 };
 
-export function Simulation({ simulationId }: { simulationId?: string }) {
+export function Simulation({
+  simulationId,
+  resetKey,
+}: {
+  simulationId?: string;
+  resetKey?: number;
+}) {
   if (simulationId && sims[simulationId]) {
     const Sim = sims[simulationId];
-    return <Sim />;
+    return <Sim key={resetKey} />;
   }
 
   return (

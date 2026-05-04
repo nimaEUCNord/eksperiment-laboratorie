@@ -27,9 +27,11 @@ interface LabTemplateProps {
   lab: LabConfig;
   guide: LabGuide;
   accent: AccentClasses;
+  simKey: number;
+  onResetSim: () => void;
 }
 
-export default function LabTemplate({ lab, guide, accent }: LabTemplateProps) {
+export default function LabTemplate({ lab, guide, accent, simKey, onResetSim }: LabTemplateProps) {
   const persistence = useLabGuidePersistence(lab.slug);
   const [hasRestored, setHasRestored] = useState(false);
   const [state, dispatch] = useReducer(reducer, guide, buildInitialState);
@@ -105,8 +107,8 @@ export default function LabTemplate({ lab, guide, accent }: LabTemplateProps) {
   const handleClearWork = () => {
     persistence.clearState();
     dispatch({ type: "reset", guide });
-    dispatch({ type: "setPhase", phase: "plan" });
     dispatch({ type: "setShowClearConfirm", value: false });
+    onResetSim();
   };
 
   if (state.phase === "choose") {
@@ -133,6 +135,7 @@ export default function LabTemplate({ lab, guide, accent }: LabTemplateProps) {
     lab,
     guide,
     accent,
+    simKey,
     onAdvance: (targetPhase?: RealPhase) => {
       const target = targetPhase ?? advanceTarget;
       if (target) goToPhase(target);
