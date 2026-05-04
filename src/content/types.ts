@@ -31,6 +31,10 @@ export type LabGuide = {
   // Phase 1 — Planlæg
   hypothesis?: string;
   hypothesisPlaceholder?: string;
+  hypothesisKeywords?: string[];
+  hypothesisHints?: string[];
+  validateHypothesis?: boolean;
+  blockOnWrongHypothesis?: boolean;
   variables?: Variable[];
   validateVariableInputs?: boolean;
   blockOnWrongVariableInputs?: boolean;

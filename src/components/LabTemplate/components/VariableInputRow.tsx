@@ -104,23 +104,21 @@ function Field({ label, placeholder, value, onChange, onBlur, isError, validated
         onBlur={onBlur}
         placeholder={placeholder}
         className={`mt-1 w-full rounded-lg border px-2 py-1.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 ${
-          isError ? "border-red-300 focus:ring-red-400" : "border-slate-200 focus:ring-sky-400"
+          validated && !isError
+            ? "border-emerald-300 focus:ring-emerald-400"
+            : "border-slate-200 focus:ring-sky-400"
         }`}
       />
-      {validated && (
+      {validated && !isError && (
         <div className="mt-1 flex items-center gap-1">
-          {isError ? (
-            <>
-              <span className="text-sm text-red-500">✗</span>
-              {(mode === "guidet" || showAnswers) && expected && (
-                <span className="text-xs text-red-500">
-                  Forventet: {Array.isArray(expected) ? expected.join(" eller ") : expected}
-                </span>
-              )}
-            </>
-          ) : (
-            <span className="text-sm text-green-500">✓</span>
-          )}
+          <span className="text-sm text-green-500">✓</span>
+        </div>
+      )}
+      {validated && isError && showAnswers && (mode === "guidet" || showAnswers) && expected && (
+        <div className="mt-1 flex items-center gap-1">
+          <span className="text-xs text-slate-500">
+            Forventet: {Array.isArray(expected) ? expected.join(" eller ") : expected}
+          </span>
         </div>
       )}
     </div>

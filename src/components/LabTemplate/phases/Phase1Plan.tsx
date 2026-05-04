@@ -18,6 +18,24 @@ export default function Phase1Plan({
     Object.values(e).some((v) => v),
   );
 
+  const VAR_FIELDS = [
+    { field: "fysiskStorrelse" as const, expectedKey: "expectedPhysicalQuantity" as const },
+    { field: "symbol" as const, expectedKey: "expectedSymbol" as const },
+    { field: "enhed" as const, expectedKey: "expectedUnit" as const },
+  ];
+  let totalFields = 0;
+  let correctCount = 0;
+  if (guide.variables) {
+    for (const v of guide.variables) {
+      const errs = phase1.validationErrors[v.name];
+      for (const { field, expectedKey } of VAR_FIELDS) {
+        if (!v[expectedKey]) continue;
+        totalFields += 1;
+        if (errs && errs[field] === false) correctCount += 1;
+      }
+    }
+  }
+
   const needsValidation =
     mode !== "open" &&
     !!guide.variables &&
@@ -25,7 +43,23 @@ export default function Phase1Plan({
     !!guide.blockOnWrongVariableInputs &&
     !guide.bypassLocks;
   const validationHasRun = Object.keys(phase1.validationErrors).length > 0;
-  const canAdvance = !needsValidation || (validationHasRun && !hasAnyError);
+  const canAdvanceVars = !needsValidation || (validationHasRun && !hasAnyError);
+
+  const needsHypValidation =
+    mode !== "open" &&
+    !!guide.hypothesisKeywords?.length &&
+    !!guide.validateHypothesis &&
+    !!guide.blockOnWrongHypothesis &&
+    !guide.bypassLocks;
+  const hypHasError = phase1.hypothesisMissingKeywords.length > 0;
+  const canAdvanceHyp =
+    !needsHypValidation || (phase1.hypothesisChecked && !hypHasError);
+
+  const canAdvance = canAdvanceVars && canAdvanceHyp;
+
+  const showHypKeywords =
+    !!guide.hypothesisKeywords?.length &&
+    (mode === "guidet" || phase1.isHypAttemptsExhausted);
 
   const handleSwitchMode = () => {
     dispatch({ type: "setMode", mode: null });
@@ -34,8 +68,10 @@ export default function Phase1Plan({
   };
 
   const handleNext = () => {
-    const isValid = phase1.validateAll();
-    if (!isValid && guide.blockOnWrongVariableInputs && !guide.bypassLocks) return;
+    const varsOk = phase1.validateAll();
+    const hypOk = phase1.checkHypothesis();
+    if (!varsOk && guide.blockOnWrongVariableInputs && !guide.bypassLocks) return;
+    if (!hypOk && guide.blockOnWrongHypothesis && !guide.bypassLocks) return;
     onAdvance();
   };
 
@@ -68,14 +104,12 @@ export default function Phase1Plan({
                     symbol: !!varError.symbol,
                     enhed: !!varError.enhed,
                   }}
-                  validatedSet={phase1.validatedFields[v.name]}
+                  validatedSet={phase1.varCheckPressed ? phase1.validatedFields[v.name] : undefined}
                   validateInputs={!!guide.validateVariableInputs}
                   mode={mode ?? "guidet"}
                   showAnswers={phase1.isAttemptsExhausted}
                   onChange={(field, value) => phase1.setVariableField(v.name, field, value)}
-                  onBlur={(field) => {
-                    if (guide.validateVariableInputs) phase1.validateField(v.name, field);
-                  }}
+                  onBlur={() => {}}
                 />
               );
             })}
@@ -84,8 +118,8 @@ export default function Phase1Plan({
       )}
 
       {guide.blockOnWrongVariableInputs && phase1.varAttempts > 0 && hasAnyError && !phase1.isAttemptsExhausted && (
-        <p className="text-sm text-red-600">
-          Forkerte svar — du har {phase1.attemptsLeft} {phase1.attemptsLeft === 1 ? "forsøg" : "forsøg"} tilbage.
+        <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-base font-semibold text-slate-800">
+          Du har <span className="text-emerald-600">{correctCount}</span> af {totalFields} rigtige — prøv igen ({phase1.attemptsLeft} forsøg tilbage).
         </p>
       )}
 
@@ -100,6 +134,24 @@ export default function Phase1Plan({
           placeholder={guide.hypothesisPlaceholder || "Skriv din hypotese her…"}
           className="mt-2 w-full rounded-xl border border-slate-200 p-3 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400"
         />
+        {phase1.hypothesisChecked && hypHasError && phase1.hypAttempts > 0 && (
+          <p className="mt-2 text-sm text-red-600">
+            💡 {guide.hypothesisHints?.[phase1.hypAttempts - 1] ?? "Hypotesen mangler centrale begreber — prøv igen."}
+            {!phase1.isHypAttemptsExhausted && (
+              <> — du har {phase1.hypAttemptsLeft} forsøg tilbage.</>
+            )}
+          </p>
+        )}
+        {phase1.hypothesisChecked && !hypHasError && (
+          <p className="mt-2 text-sm text-green-600">
+            ✓ Hypotesen indeholder de forventede nøgleord.
+          </p>
+        )}
+        {showHypKeywords && (
+          <p className="mt-2 text-xs text-red-500">
+            Forventede nøgleord: {guide.hypothesisKeywords!.map((k) => `"${k}"`).join(", ")}
+          </p>
+        )}
       </div>
 
       <div className="flex items-center justify-between">
@@ -113,9 +165,17 @@ export default function Phase1Plan({
           {mode !== "open" && guide.validateVariableInputs && guide.variables && (
             <button
               onClick={() => phase1.checkVariables()}
-              className={`rounded-xl px-6 py-2.5 text-sm font-medium text-white transition-opacity ${accent.bg} ${canAdvance ? "opacity-40" : ""}`}
+              className={`rounded-xl px-6 py-2.5 text-sm font-medium text-white transition-opacity ${accent.bg} ${canAdvanceVars ? "opacity-40" : ""}`}
             >
               Tjek variable
+            </button>
+          )}
+          {mode !== "open" && guide.validateHypothesis && !!guide.hypothesisKeywords?.length && (
+            <button
+              onClick={() => phase1.checkHypothesis()}
+              className={`rounded-xl px-6 py-2.5 text-sm font-medium text-white transition-opacity ${accent.bg} ${canAdvanceHyp ? "opacity-40" : ""}`}
+            >
+              Tjek hypotese
             </button>
           )}
           <button

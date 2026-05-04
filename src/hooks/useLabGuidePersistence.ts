@@ -2,14 +2,18 @@
 
 import { useCallback, useState, useEffect } from 'react';
 
-const SCHEMA_VERSION = 2;
+const SCHEMA_VERSION = 3;
 
 export interface PersistedLabGuideState {
   hypothesis: string;
+  hypAttempts: number;
+  hypothesisChecked: boolean;
+  hypothesisMissingKeywords: string[];
   varInputs: Record<string, { fysiskStorrelse: string; symbol: string; enhed: string }>;
   validationErrors: Record<string, Record<string, boolean>>;
   validatedFields: Record<string, Set<'fysiskStorrelse' | 'symbol' | 'enhed'>>;
   varAttempts: number;
+  varCheckPressed: boolean;
   materialsChecked: boolean[];
   setupChecked: boolean[];
   rows: Record<string, string>[];

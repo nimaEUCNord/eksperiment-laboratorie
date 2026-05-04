@@ -24,6 +24,14 @@ export const hookesLov: LabConfig = {
       "Det forventes, at forlængelsen x er ligefrem proportional med kraften F, så grafen bliver en ret linje gennem (0, 0). Hældningen er fjederkonstanten k.",
     hypothesisPlaceholder:
       "Min hypotese er, at forlængelsen er direkte proportional med kraften, fordi…",
+    hypothesisKeywords: ["fjederkonstant", "proportional"],
+    hypothesisHints: [
+      "Hvilken sammenhæng forventer du mellem kraften og forlængelsen? Er den lineær eller noget andet?",
+      "Hvad hedder den konstant, der beskriver fjederens stivhed, og som svarer til hældningen af (x, F)-grafen?",
+      "Brug ordene \"proportional\" og \"fjederkonstant\" — fx \"forlængelsen er proportional med kraften, og hældningen er fjederkonstanten k\".",
+    ],
+    validateHypothesis: true,
+    blockOnWrongHypothesis: true,
     validateVariableInputs: true,
     blockOnWrongVariableInputs: false,
     bypassLocks: true,
