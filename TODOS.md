@@ -11,7 +11,8 @@ Last updated: 2026-05-02
 - [ ] Make hints and attempts visually consistent across all Tjek interactions — Currently the feedback UI (attempt counter, hint text, correct/wrong highlighting) differs between Tjek Variabler and Tjek Hypotese in Phase 1. Unify into a shared visual language.
 - [ ] Phase progress bar navigation should enforce the same locks as "Næste fase" — Clicking a phase in the progress bar currently bypasses progression requirements that the Næste fase button enforces. The two paths should apply identical validation before allowing the jump.
 - [ ] Add graph canvas to Phase 4 (Analysér) — Students should be able to plot their Phase 3 measurements directly in Phase 4 to visually analyse the relationship between variables. Consider using the existing `MeasurementChart` component with the lab's `ChartConfig`.
-
+- [ ] "Nulstil arbejde" should return to inquiry type selection — After confirming the reset, clear all persisted state and navigate back to the `PhaseChooser` screen so students can pick a new scaffolding mode from scratch.
+- [ ] 
 ## 💡 Ideas (Backlog)
 - [ ] Possible removal of Tyngdekraft box in `TemplateForsog` — Students can already read the force value from the dynamometer pointer; the stat box may be redundant. Decide whether to keep it as a learning aid or remove it to push students to read the instrument. See `LAB_CONFIG.stats.force` and the `stats` callback in [src/components/sims/TemplateForsog.tsx](src/components/sims/TemplateForsog.tsx).
 
