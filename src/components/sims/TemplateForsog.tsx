@@ -31,13 +31,6 @@ const LAB_CONFIG = {
     options: [0.1, 0.5, 1, 2, 5, 10, 50],
     default: 50,
   },
-
-  // Stat-bokse vist under kanvasset
-  stats: {
-    mass: { label: "Masse", symbol: "m" },
-    g: { label: "Tyngdeacc.", symbol: "g" },
-    force: { label: "Tyngdekraft", symbol: "F_t" },
-  },
 };
 
 type TemplateProps = SketchProps & {
@@ -70,10 +63,14 @@ const sketch: Sketch<TemplateProps> = (p5) => {
   p5.draw = () => {
     p5.background(248, 250, 252);
 
-    drawBracket(p5);
-    drawDynamometer(p5, massKg, dynMaxN);
+    const force = massKg * G;
+    const broken = force > dynMaxN;
+    const dropOffset = broken ? 14 : 0;
 
-    const meterBottom = METER_TOP + METER_H;
+    drawBracket(p5);
+    drawDynamometer(p5, massKg, dynMaxN, broken, dropOffset);
+
+    const meterBottom = METER_TOP + METER_H + dropOffset;
     const hookTop = meterBottom;
     const hookBottom = hookTop + HOOK_LEN;
     drawHook(p5, hookTop, hookBottom);
@@ -114,11 +111,12 @@ function drawDynamometer(
   p5: P5CanvasInstance<TemplateProps>,
   massKg: number,
   dynMaxN: number,
+  broken: boolean,
+  dropOffset: number,
 ) {
   const cx = W / 2;
   const top = METER_TOP;
   const left = cx - METER_W / 2;
-  const right = cx + METER_W / 2;
   const bottom = top + METER_H;
 
   // top cap (where the suspension ring attaches)
@@ -133,17 +131,47 @@ function drawDynamometer(
   p5.noFill();
   p5.ellipse(cx, top - 5, 12, 10);
 
-  // tube body — pale plastic with subtle highlight
+  // tube body — pale plastic with subtle highlight.
+  // When broken, the tube terminates at the crack; the bottom cap drops below the gap.
+  const tubeTop = top + capH;
+  const tubeFullBottom = bottom - capH;
+  const crackY = tubeFullBottom; // the tube cleaves at the bottom-cap junction
   p5.noStroke();
   p5.fill(241, 245, 249);
-  p5.rect(left, top + capH, METER_W, METER_H - capH * 2, 2);
+  p5.rect(left, tubeTop, METER_W, crackY - tubeTop, 2);
   // glossy highlight strip on the left edge
   p5.fill(255, 255, 255, 180);
-  p5.rect(left + 4, top + capH + 4, 6, METER_H - capH * 2 - 8, 2);
+  p5.rect(left + 4, tubeTop + 4, 6, crackY - tubeTop - 8, 2);
 
-  // bottom cap
+  // bottom cap (drops when broken — it's torn off the tube)
   p5.fill(71, 85, 105);
-  p5.rect(left - 4, bottom - capH, METER_W + 8, capH, 2, 2, 6, 6);
+  p5.rect(left - 4, tubeFullBottom + dropOffset, METER_W + 8, capH, 2, 2, 6, 6);
+
+  if (broken) {
+    // jagged crack along both severed edges
+    drawCrack(p5, left, METER_W, crackY, +1);
+    drawCrack(p5, left, METER_W, tubeFullBottom + dropOffset, -1);
+
+    // dangling spring tail — a zig-zag coil hanging out of the broken tube
+    p5.stroke(100, 116, 139);
+    p5.strokeWeight(1.5);
+    p5.noFill();
+    const springTopY = crackY - 1;
+    const springBottomY = tubeFullBottom + dropOffset - 1;
+    const coils = 3;
+    const amp = 5;
+    p5.beginShape();
+    p5.vertex(cx, springTopY);
+    for (let i = 0; i < coils; i++) {
+      const t1 = (i + 0.5) / coils;
+      const t2 = (i + 1) / coils;
+      const y1 = p5.lerp(springTopY, springBottomY, t1);
+      const y2 = p5.lerp(springTopY, springBottomY, t2);
+      p5.vertex(cx + (i % 2 === 0 ? amp : -amp), y1);
+      p5.vertex(cx, y2);
+    }
+    p5.endShape();
+  }
 
   // scale region (within the body)
   const scaleTop = top + capH + 10;
@@ -187,13 +215,16 @@ function drawDynamometer(
   p5.text("N", cx, top + capH / 2);
   p5.textStyle(p5.NORMAL);
 
-  // pointer indicator (red disc) — clamped to scale range
+  // pointer indicator — clamped to scale range; muted grey when the meter has failed
   const force = massKg * G;
   const clamped = Math.min(force, dynMaxN);
-  const overflow = force > dynMaxN;
   const pointerY = scaleTop + (clamped / dynMaxN) * scaleLen;
 
-  p5.fill(220, 38, 38);
+  if (broken) {
+    p5.fill(148, 163, 184);
+  } else {
+    p5.fill(220, 38, 38);
+  }
   p5.noStroke();
   // arrow-shaped indicator pointing right at the scale
   p5.triangle(
@@ -206,15 +237,35 @@ function drawDynamometer(
   );
   p5.rect(cx - 24, pointerY - 4, 12, 8, 2);
 
-  if (overflow) {
+  if (broken) {
     p5.fill(220, 38, 38);
-    p5.textAlign(p5.CENTER, p5.CENTER);
+    p5.textAlign(p5.RIGHT, p5.CENTER);
     p5.textStyle(p5.BOLD);
-    p5.textSize(9);
-    p5.text("MAX", cx, scaleBottom + 8);
+    p5.textSize(13);
+    p5.text("UPS!", left - 8, tubeFullBottom + dropOffset / 2);
     p5.textStyle(p5.NORMAL);
   }
 
+}
+
+function drawCrack(
+  p5: P5CanvasInstance<TemplateProps>,
+  left: number,
+  width: number,
+  y: number,
+  bias: 1 | -1,
+) {
+  p5.stroke(51, 65, 85);
+  p5.strokeWeight(1.5);
+  p5.noFill();
+  p5.beginShape();
+  const segments = 7;
+  for (let i = 0; i <= segments; i++) {
+    const x = left + (width * i) / segments;
+    const dy = (i % 2 === 0 ? -2 : 2) * bias;
+    p5.vertex(x, y + dy);
+  }
+  p5.endShape();
 }
 
 function drawHook(
@@ -323,17 +374,6 @@ export default function TemplateForsog() {
         massKg: v.massKg,
         dynMaxN: v.dynMaxN,
       })}
-      stats={(v) => {
-        const force = v.massKg * G;
-        return [
-          {
-            ...LAB_CONFIG.stats.mass,
-            value: `${v.massKg.toFixed(LAB_CONFIG.mass.decimals)} ${LAB_CONFIG.mass.unit}`,
-          },
-          { ...LAB_CONFIG.stats.g, value: `${G.toFixed(2)} m/s²` },
-          { ...LAB_CONFIG.stats.force, value: `${force.toFixed(2)} N` },
-        ];
-      }}
     />
   );
 }
