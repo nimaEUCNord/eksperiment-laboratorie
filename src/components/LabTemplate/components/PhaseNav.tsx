@@ -23,7 +23,7 @@ export default function PhaseNav({
         {prevLabel}
       </button>
       <button
-        onClick={onNext}
+        onClick={() => onNext()}
         disabled={nextDisabled}
         className={`rounded-xl px-6 py-2.5 text-sm font-medium text-white ${accent.bg} disabled:opacity-50 disabled:cursor-not-allowed`}
       >
