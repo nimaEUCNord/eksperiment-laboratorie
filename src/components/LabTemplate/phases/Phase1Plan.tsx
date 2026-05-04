@@ -3,6 +3,7 @@ import type { PhaseProps, RealPhase } from "../types";
 import { usePhase1State } from "../hooks/usePhase1State";
 import VariableInputRow from "../components/VariableInputRow";
 import ResetWorkButton from "../components/ResetWorkButton";
+import TjekFeedback from "../components/TjekFeedback";
 
 export default function Phase1Plan({
   state,
@@ -120,11 +121,21 @@ export default function Phase1Plan({
         </div>
       )}
 
-      {guide.blockOnWrongVariableInputs && phase1.varAttempts > 0 && hasAnyError && !phase1.isAttemptsExhausted && (
-        <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-base font-semibold text-slate-800">
-          Du har <span className="text-emerald-600">{correctCount}</span> af {totalFields} rigtige — prøv igen ({phase1.attemptsLeft} forsøg tilbage).
-        </p>
-      )}
+      <TjekFeedback
+        status={
+          guide.blockOnWrongVariableInputs && phase1.varAttempts > 0 && hasAnyError
+            ? "wrong"
+            : phase1.varCheckPressed && !hasAnyError
+            ? "correct"
+            : null
+        }
+        message={
+          hasAnyError
+            ? `Du har ${correctCount} af ${totalFields} rigtige — ${guide.variableHints?.[phase1.varAttempts - 1] ?? "prøv igen."}`
+            : "Alle variable er korrekte."
+        }
+        attemptsLeft={hasAnyError && !phase1.isAttemptsExhausted ? phase1.attemptsLeft : undefined}
+      />
 
       <div>
         <label className="block text-sm font-medium text-slate-700">
@@ -137,19 +148,21 @@ export default function Phase1Plan({
           placeholder={guide.hypothesisPlaceholder || "Skriv din hypotese her…"}
           className="mt-2 w-full rounded-xl border border-slate-200 p-3 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400"
         />
-        {phase1.hypothesisChecked && hypHasError && phase1.hypAttempts > 0 && (
-          <p className="mt-2 text-sm text-red-600">
-            💡 {guide.hypothesisHints?.[phase1.hypAttempts - 1] ?? "Hypotesen mangler centrale begreber — prøv igen."}
-            {!phase1.isHypAttemptsExhausted && (
-              <> — du har {phase1.hypAttemptsLeft} forsøg tilbage.</>
-            )}
-          </p>
-        )}
-        {phase1.hypothesisChecked && !hypHasError && (
-          <p className="mt-2 text-sm text-green-600">
-            ✓ Hypotesen indeholder de forventede nøgleord.
-          </p>
-        )}
+        <div className="mt-2">
+          <TjekFeedback
+            status={
+              phase1.hypothesisChecked
+                ? hypHasError ? "wrong" : "correct"
+                : null
+            }
+            message={
+              hypHasError
+                ? (guide.hypothesisHints?.[phase1.hypAttempts - 1] ?? "Hypotesen mangler centrale begreber — prøv igen.")
+                : "Hypotesen indeholder de forventede nøgleord."
+            }
+            attemptsLeft={hypHasError && !phase1.isHypAttemptsExhausted ? phase1.hypAttemptsLeft : undefined}
+          />
+        </div>
 
       </div>
 

@@ -38,6 +38,7 @@ export type LabGuide = {
   variables?: Variable[];
   validateVariableInputs?: boolean;
   blockOnWrongVariableInputs?: boolean;
+  variableHints?: string[];
 
   // Phase 2 — Opstil
   materials?: string[];

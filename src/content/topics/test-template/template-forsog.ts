@@ -35,6 +35,12 @@ export const templateForsog: LabConfig = {
     ],
     validateHypothesis: true,
     blockOnWrongHypothesis: true,
+    variableHints: [
+      "Husk det du læste i teoriafsnittet.",
+      "Hvad kunne du ændre på i simulationen uafhængigt af andre variable?",
+      "Tænk på enhederne: masse måles fx. i kg eller g.",
+      "**Mark for helvede...**",
+    ],
     validateVariableInputs: true,
     blockOnWrongVariableInputs: true,
     blockOnMissingConstants: true,
