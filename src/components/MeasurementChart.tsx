@@ -234,16 +234,26 @@ export default function MeasurementChart({ rows, chart, showFit, showR2, xAxisIn
         labels: {
           usePointStyle: true,
           generateLabels: (c: Chart) =>
-            c.data.datasets.map((ds, i) => ({
-              text: typeof ds.label === "string" ? ds.label : "",
-              fillStyle: (ds.backgroundColor as string) ?? "transparent",
-              strokeStyle: (ds.borderColor as string) ?? "transparent",
-              lineWidth: (ds.borderWidth as number) ?? 2,
-              lineDash: (ds.borderDash as number[]) ?? [],
-              pointStyle: (ds.pointStyle as "circle" | "line") ?? "circle",
-              hidden: !c.isDatasetVisible(i),
-              datasetIndex: i,
-            })),
+            c.data.datasets.map((ds, i) => {
+              const d = ds as {
+                label?: string;
+                backgroundColor?: string;
+                borderColor?: string;
+                borderWidth?: number;
+                borderDash?: number[];
+                pointStyle?: "circle" | "line";
+              };
+              return {
+                text: typeof d.label === "string" ? d.label : "",
+                fillStyle: d.backgroundColor ?? "transparent",
+                strokeStyle: d.borderColor ?? "transparent",
+                lineWidth: d.borderWidth ?? 2,
+                lineDash: d.borderDash ?? [],
+                pointStyle: d.pointStyle ?? "circle",
+                hidden: !c.isDatasetVisible(i),
+                datasetIndex: i,
+              };
+            }),
         },
       },
     },
