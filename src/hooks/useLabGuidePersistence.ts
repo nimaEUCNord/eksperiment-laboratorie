@@ -2,7 +2,7 @@
 
 import { useCallback, useState, useEffect } from 'react';
 
-const SCHEMA_VERSION = 4;
+const SCHEMA_VERSION = 5;
 
 export interface PersistedLabGuideState {
   hypothesis: string;
@@ -23,6 +23,9 @@ export interface PersistedLabGuideState {
   mode: 'guidet' | 'semi' | 'open';
   chartXAxis?: string;
   chartYAxis?: string;
+  showFit?: boolean;
+  showR2?: boolean;
+  forceThroughOrigin?: boolean;
 }
 
 interface StoredData {

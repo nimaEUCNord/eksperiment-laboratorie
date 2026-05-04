@@ -34,19 +34,20 @@ export default function Phase4Analyse({
         simKey={simKey}
       />
 
-      {guide.chart && phase4.effectiveChart && (
+      {guide.chart && (
         <div className="space-y-3">
           <div className="flex flex-wrap gap-4">
             <label className="flex-1 min-w-[160px]">
               <span className="block text-xs font-medium text-slate-600 mb-1">X-akse</span>
               <select
                 value={phase4.chartXAxis}
-                onChange={(e) => phase4.setChartXAxis(e.target.value)}
+                onChange={(e) => phase4.setChartXAxis(e.target.value || undefined)}
                 className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 font-mono text-sm text-slate-700 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
               >
-                {phase4.axisOptions.map((name) => (
-                  <option key={name} value={name}>
-                    {name}
+                <option value="">Vælg variabel</option>
+                {phase4.axisOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
                   </option>
                 ))}
               </select>
@@ -55,18 +56,55 @@ export default function Phase4Analyse({
               <span className="block text-xs font-medium text-slate-600 mb-1">Y-akse</span>
               <select
                 value={phase4.chartYAxis}
-                onChange={(e) => phase4.setChartYAxis(e.target.value)}
+                onChange={(e) => phase4.setChartYAxis(e.target.value || undefined)}
                 className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 font-mono text-sm text-slate-700 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
               >
-                {phase4.axisOptions.map((name) => (
-                  <option key={name} value={name}>
-                    {name}
+                <option value="">Vælg variabel</option>
+                {phase4.axisOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
                   </option>
                 ))}
               </select>
             </label>
           </div>
-          <MeasurementChart rows={phase4.rows} chart={phase4.effectiveChart} />
+          <div className="flex flex-wrap gap-4 text-sm text-slate-700">
+            <label className="inline-flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={phase4.showFit}
+                onChange={(e) => phase4.setShowFit(e.target.checked)}
+                className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+              />
+              Vis lineær regression
+            </label>
+            <label className="inline-flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={phase4.showR2}
+                onChange={(e) => phase4.setShowR2(e.target.checked)}
+                className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+              />
+              Vis R²-værdi
+            </label>
+            <label className="inline-flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={phase4.forceThroughOrigin}
+                onChange={(e) => phase4.setForceThroughOrigin(e.target.checked)}
+                className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+              />
+              Tving gennem nul
+            </label>
+          </div>
+          <MeasurementChart
+            rows={phase4.rows}
+            chart={phase4.effectiveChart}
+            showFit={phase4.showFit}
+            showR2={phase4.showR2}
+            xAxisInput={phase4.xAxisInput}
+            yAxisInput={phase4.yAxisInput}
+          />
         </div>
       )}
 
@@ -125,7 +163,7 @@ export default function Phase4Analyse({
                   </div>
                 </div>
               </div>
-              {phase4.fit && (
+              {phase4.showFit && phase4.fit && (
                 <p className="mt-3 text-center text-xs text-slate-500">
                   Hældning fra bedste rette linje: <strong>{phase4.fit.slope.toFixed(3)}</strong>
                   {phase4.fit.intercept !== 0 && ` · skæring: ${phase4.fit.intercept.toFixed(3)}`}

@@ -47,6 +47,9 @@ export type Action =
   | { type: "setStudentValue"; value: string }
   | { type: "setChartXAxis"; field: string | undefined }
   | { type: "setChartYAxis"; field: string | undefined }
+  | { type: "setShowFit"; value: boolean }
+  | { type: "setShowR2"; value: boolean }
+  | { type: "setForceThroughOrigin"; value: boolean }
   | { type: "updateReflection"; index: number; value: string }
   | { type: "toggleHint"; id: string }
   | { type: "setShowFacit"; value: boolean }
@@ -81,6 +84,11 @@ export function reducer(state: GuideState, action: Action): GuideState {
         ...(p.mode !== undefined && { mode: p.mode }),
         ...(p.chartXAxis !== undefined && { chartXAxis: p.chartXAxis }),
         ...(p.chartYAxis !== undefined && { chartYAxis: p.chartYAxis }),
+        ...(p.showFit !== undefined && { showFit: p.showFit }),
+        ...(p.showR2 !== undefined && { showR2: p.showR2 }),
+        ...(p.forceThroughOrigin !== undefined && {
+          forceThroughOrigin: p.forceThroughOrigin,
+        }),
       };
     }
 
@@ -231,6 +239,15 @@ export function reducer(state: GuideState, action: Action): GuideState {
     case "setChartYAxis":
       return { ...state, chartYAxis: action.field };
 
+    case "setShowFit":
+      return { ...state, showFit: action.value };
+
+    case "setShowR2":
+      return { ...state, showR2: action.value };
+
+    case "setForceThroughOrigin":
+      return { ...state, forceThroughOrigin: action.value };
+
     case "updateReflection":
       return {
         ...state,
@@ -280,5 +297,8 @@ export function extractPersistedSlice(state: GuideState): PersistedLabGuideState
     mode: state.mode || "guidet",
     chartXAxis: state.chartXAxis,
     chartYAxis: state.chartYAxis,
+    showFit: state.showFit,
+    showR2: state.showR2,
+    forceThroughOrigin: state.forceThroughOrigin,
   };
 }

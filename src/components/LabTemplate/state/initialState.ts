@@ -55,6 +55,9 @@ export function buildInitialPersistedSlice(guide: LabGuide): PersistedSlice {
     mode: null,
     chartXAxis: undefined,
     chartYAxis: undefined,
+    showFit: false,
+    showR2: false,
+    forceThroughOrigin: false,
   };
 }
 
