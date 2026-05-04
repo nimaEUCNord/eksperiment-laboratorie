@@ -58,6 +58,9 @@ export default function Phase1Plan({
   const canAdvanceHyp =
     !needsHypValidation || (phase1.hypothesisChecked && !hypHasError);
 
+  const totalHypKeywords = guide.hypothesisKeywords?.length ?? 0;
+  const matchedHypKeywords = totalHypKeywords - phase1.hypothesisMissingKeywords.length;
+
   const canAdvance = canAdvanceVars && canAdvanceHyp;
 
   const handleSwitchMode = () => {
@@ -131,9 +134,10 @@ export default function Phase1Plan({
         }
         message={
           hasAnyError
-            ? `Du har ${correctCount} af ${totalFields} rigtige — ${guide.variableHints?.[phase1.varAttempts - 1] ?? "prøv igen."}`
+            ? (guide.variableHints?.[phase1.varAttempts - 1] ?? "Prøv igen.")
             : "Alle variable er korrekte."
         }
+        counter={{ current: correctCount, total: totalFields, label: "Korrekte variable" }}
         attemptsLeft={hasAnyError && !phase1.isAttemptsExhausted ? phase1.attemptsLeft : undefined}
       />
 
@@ -159,6 +163,11 @@ export default function Phase1Plan({
               hypHasError
                 ? (guide.hypothesisHints?.[phase1.hypAttempts - 1] ?? "Hypotesen mangler centrale begreber — prøv igen.")
                 : "Hypotesen indeholder de forventede nøgleord."
+            }
+            counter={
+              totalHypKeywords > 0
+                ? { current: matchedHypKeywords, total: totalHypKeywords, label: "Nøgleord fundet" }
+                : undefined
             }
             attemptsLeft={hypHasError && !phase1.isHypAttemptsExhausted ? phase1.hypAttemptsLeft : undefined}
           />

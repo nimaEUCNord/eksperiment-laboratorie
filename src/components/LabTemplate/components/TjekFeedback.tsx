@@ -1,10 +1,13 @@
+import PhaseLockHint from "./PhaseLockHint";
+
 interface TjekFeedbackProps {
   status: "wrong" | "correct" | null;
   message: string;
   attemptsLeft?: number;
+  counter?: { current: number; total: number; label: string };
 }
 
-export default function TjekFeedback({ status, message, attemptsLeft }: TjekFeedbackProps) {
+export default function TjekFeedback({ status, message, attemptsLeft, counter }: TjekFeedbackProps) {
   if (!status) return null;
 
   if (status === "correct") {
@@ -16,11 +19,10 @@ export default function TjekFeedback({ status, message, attemptsLeft }: TjekFeed
   }
 
   return (
-    <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
-      <p className="text-sm text-slate-800">💡 {message}</p>
-      {attemptsLeft !== undefined && attemptsLeft > 0 && (
-        <p className="mt-1 text-xs text-slate-500">{attemptsLeft} forsøg tilbage</p>
-      )}
-    </div>
+    <PhaseLockHint
+      counter={counter}
+      messages={[message]}
+      attemptsLeft={attemptsLeft}
+    />
   );
 }

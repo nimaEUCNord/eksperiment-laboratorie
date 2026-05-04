@@ -4,6 +4,7 @@ import { usePhase3State } from "../hooks/usePhase3State";
 import EmbeddedSim from "../components/EmbeddedSim";
 import VariableHeaderCell from "../components/VariableHeaderCell";
 import PhaseNav from "../components/PhaseNav";
+import PhaseLockHint from "../components/PhaseLockHint";
 import ResetWorkButton from "../components/ResetWorkButton";
 
 const handleNumberInputWheel = (e: React.WheelEvent<HTMLInputElement>) => {
@@ -139,24 +140,27 @@ export default function Phase3Measure({
         + Tilføj måling
       </button>
 
-      <div className="text-sm text-slate-600">
-        <p>
-          Gyldige målinger: <strong>{phase3.validRows.length}</strong> /{" "}
-          {phase3.suggestedMeasurements || phase3.rows.length}
-        </p>
-        {!guide.bypassLocks && !phase3.canProceedToPhase4 && (
-          <div className="mt-1 space-y-1 text-amber-600">
-            {phase3.validRows.length < phase3.minMeasurements && (
-              <p>Indsaml mindst {phase3.minMeasurements} gyldige målinger før næste fase.</p>
-            )}
-            {phase3.controlVars.length > 0 &&
-              !phase3.allConstantsFilled &&
-              guide.blockOnMissingConstants !== false && (
-                <p>Udfyld alle konstanter før næste fase.</p>
-              )}
-          </div>
-        )}
-      </div>
+      <PhaseLockHint
+        counter={{
+          current: phase3.validRows.length,
+          total: phase3.suggestedMeasurements || phase3.rows.length,
+          label: "Gyldige målinger",
+        }}
+        messages={
+          !guide.bypassLocks && !phase3.canProceedToPhase4
+            ? [
+                phase3.validRows.length < phase3.minMeasurements
+                  ? `Indsaml mindst ${phase3.minMeasurements} gyldige målinger før næste fase.`
+                  : null,
+                phase3.controlVars.length > 0 &&
+                !phase3.allConstantsFilled &&
+                guide.blockOnMissingConstants !== false
+                  ? "Udfyld alle konstanter før næste fase."
+                  : null,
+              ].filter((m): m is string => m !== null)
+            : []
+        }
+      />
 
       <PhaseNav
         accent={accent}
