@@ -35,6 +35,7 @@ export function buildInitialPersistedSlice(guide: LabGuide): PersistedSlice {
     varInputs: {},
     validationErrors: {},
     validatedFields: {},
+    varAttempts: 0,
     materialsChecked: Array.from(
       { length: guide.materials?.length || 0 },
       () => false,

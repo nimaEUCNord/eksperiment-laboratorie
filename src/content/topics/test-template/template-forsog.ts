@@ -28,9 +28,9 @@ export const templateForsog: LabConfig = {
       "Det forventes, at tyngdekraften er ligefrem proportional med massen og at hældningstallet er lig med tyngdeaccelerationen $g=9,82 m/s^2$",
     hypothesisPlaceholder: "Det forventes, at ... og at hældningstallet bliver ...",
     validateVariableInputs: true,
-    blockOnWrongVariableInputs: false,
+    blockOnWrongVariableInputs: true,
     blockOnMissingConstants: true,
-    bypassLocks: true,
+    bypassLocks: false,
     minMeasurements: 4,
     suggestedMeasurements: 6,
     variables: [

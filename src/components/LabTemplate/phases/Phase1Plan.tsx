@@ -14,6 +14,19 @@ export default function Phase1Plan({
   const phase1 = usePhase1State(state, dispatch, guide);
   const mode = phase1.mode;
 
+  const hasAnyError = Object.values(phase1.validationErrors).some((e) =>
+    Object.values(e).some((v) => v),
+  );
+
+  const needsValidation =
+    mode !== "open" &&
+    !!guide.variables &&
+    !!guide.validateVariableInputs &&
+    !!guide.blockOnWrongVariableInputs &&
+    !guide.bypassLocks;
+  const validationHasRun = Object.keys(phase1.validationErrors).length > 0;
+  const canAdvance = !needsValidation || (validationHasRun && !hasAnyError);
+
   const handleSwitchMode = () => {
     dispatch({ type: "setMode", mode: null });
     dispatch({ type: "setPhase", phase: "choose" });
@@ -58,6 +71,7 @@ export default function Phase1Plan({
                   validatedSet={phase1.validatedFields[v.name]}
                   validateInputs={!!guide.validateVariableInputs}
                   mode={mode ?? "guidet"}
+                  showAnswers={phase1.isAttemptsExhausted}
                   onChange={(field, value) => phase1.setVariableField(v.name, field, value)}
                   onBlur={(field) => {
                     if (guide.validateVariableInputs) phase1.validateField(v.name, field);
@@ -67,6 +81,12 @@ export default function Phase1Plan({
             })}
           </div>
         </div>
+      )}
+
+      {guide.blockOnWrongVariableInputs && phase1.varAttempts > 0 && hasAnyError && !phase1.isAttemptsExhausted && (
+        <p className="text-sm text-red-600">
+          Forkerte svar — du har {phase1.attemptsLeft} {phase1.attemptsLeft === 1 ? "forsøg" : "forsøg"} tilbage.
+        </p>
       )}
 
       <div>
@@ -89,13 +109,22 @@ export default function Phase1Plan({
         >
           ← Skift undersøgelsesform
         </button>
-        <button
-          onClick={handleNext}
-          disabled={phase1.isAdvanceBlockedByValidation()}
-          className={`rounded-xl px-6 py-2.5 text-sm font-medium text-white ${accent.bg} disabled:opacity-50 disabled:cursor-not-allowed`}
-        >
-          Næste fase →
-        </button>
+        <div className="flex gap-2">
+          {mode !== "open" && guide.validateVariableInputs && guide.variables && (
+            <button
+              onClick={() => phase1.checkVariables()}
+              className={`rounded-xl px-6 py-2.5 text-sm font-medium text-white transition-opacity ${accent.bg} ${canAdvance ? "opacity-40" : ""}`}
+            >
+              Tjek variable
+            </button>
+          )}
+          <button
+            onClick={handleNext}
+            className={`rounded-xl px-6 py-2.5 text-sm font-medium text-white transition-opacity ${accent.bg} ${canAdvance ? "" : "opacity-40"}`}
+          >
+            Næste fase →
+          </button>
+        </div>
       </div>
 
       <ResetWorkButton onClick={onRequestReset} />

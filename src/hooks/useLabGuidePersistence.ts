@@ -9,6 +9,7 @@ export interface PersistedLabGuideState {
   varInputs: Record<string, { fysiskStorrelse: string; symbol: string; enhed: string }>;
   validationErrors: Record<string, Record<string, boolean>>;
   validatedFields: Record<string, Set<'fysiskStorrelse' | 'symbol' | 'enhed'>>;
+  varAttempts: number;
   materialsChecked: boolean[];
   setupChecked: boolean[];
   rows: Record<string, string>[];

@@ -8,6 +8,7 @@ interface VariableInputRowProps {
   validatedSet: Set<VarField> | undefined;
   validateInputs: boolean;
   mode: Mode;
+  showAnswers?: boolean;
   onChange: (field: VarField, value: string) => void;
   onBlur: (field: VarField) => void;
 }
@@ -26,6 +27,7 @@ export default function VariableInputRow({
   validatedSet,
   validateInputs,
   mode,
+  showAnswers,
   onChange,
   onBlur,
 }: VariableInputRowProps) {
@@ -46,6 +48,7 @@ export default function VariableInputRow({
           isError={errors.fysiskStorrelse}
           validated={validatedSet?.has("fysiskStorrelse") && validateInputs && !!v.expectedPhysicalQuantity}
           mode={mode}
+          showAnswers={showAnswers}
           expected={v.expectedPhysicalQuantity}
         />
         <Field
@@ -57,6 +60,7 @@ export default function VariableInputRow({
           isError={errors.symbol}
           validated={validatedSet?.has("symbol") && validateInputs && !!v.expectedSymbol}
           mode={mode}
+          showAnswers={showAnswers}
           expected={v.expectedSymbol}
         />
         <Field
@@ -68,6 +72,7 @@ export default function VariableInputRow({
           isError={errors.enhed}
           validated={validatedSet?.has("enhed") && validateInputs && !!v.expectedUnit}
           mode={mode}
+          showAnswers={showAnswers}
           expected={v.expectedUnit}
         />
       </div>
@@ -84,10 +89,11 @@ interface FieldProps {
   isError: boolean;
   validated: boolean | undefined;
   mode: Mode;
+  showAnswers?: boolean;
   expected: string | string[] | undefined;
 }
 
-function Field({ label, placeholder, value, onChange, onBlur, isError, validated, mode, expected }: FieldProps) {
+function Field({ label, placeholder, value, onChange, onBlur, isError, validated, mode, showAnswers, expected }: FieldProps) {
   return (
     <div>
       <label className="block text-xs font-medium text-slate-700">{label}</label>
@@ -106,7 +112,7 @@ function Field({ label, placeholder, value, onChange, onBlur, isError, validated
           {isError ? (
             <>
               <span className="text-sm text-red-500">✗</span>
-              {mode === "guidet" && expected && (
+              {(mode === "guidet" || showAnswers) && expected && (
                 <span className="text-xs text-red-500">
                   Forventet: {Array.isArray(expected) ? expected.join(" eller ") : expected}
                 </span>

@@ -3,6 +3,8 @@ import type { LabGuide, Variable } from "@/content/types";
 import type { Action, GuideState } from "../state/reducer";
 import type { ValidationErrors, VarField } from "../types";
 
+const MAX_ATTEMPTS = 3;
+
 function checkAnswer(
   studentAnswer: string,
   expectedValue: string | string[] | undefined,
@@ -33,6 +35,9 @@ export function usePhase1State(
   dispatch: Dispatch<Action>,
   guide: LabGuide,
 ) {
+  const isAttemptsExhausted = state.varAttempts >= MAX_ATTEMPTS;
+  const attemptsLeft = MAX_ATTEMPTS - state.varAttempts;
+
   const setHypothesis = (value: string) => dispatch({ type: "setHypothesis", value });
 
   const setVariableField = (variable: string, field: VarField, value: string) =>
@@ -85,6 +90,14 @@ export function usePhase1State(
     return !hasErrors;
   };
 
+  const checkVariables = (): boolean => {
+    const isValid = validateAll();
+    if (!isValid && guide.blockOnWrongVariableInputs && state.varAttempts < MAX_ATTEMPTS) {
+      dispatch({ type: "incrementVarAttempts" });
+    }
+    return isValid;
+  };
+
   const checkConditions = (): boolean => {
     if (!state.hypothesis.trim()) return false;
     if (!guide.validateVariableInputs) return true;
@@ -114,11 +127,15 @@ export function usePhase1State(
     varInputs: state.varInputs,
     validationErrors: state.validationErrors,
     validatedFields: state.validatedFields,
+    varAttempts: state.varAttempts,
+    isAttemptsExhausted,
+    attemptsLeft,
     mode: state.mode,
     setHypothesis,
     setVariableField,
     validateField,
     validateAll,
+    checkVariables,
     checkConditions,
     isAdvanceBlockedByValidation,
   };

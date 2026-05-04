@@ -32,6 +32,7 @@ export type Action =
       validated: Record<string, Set<VarField>>;
     }
   | { type: "clearValidatedFields" }
+  | { type: "incrementVarAttempts" }
   | { type: "toggleMaterial"; index: number }
   | { type: "toggleSetup"; index: number }
   | { type: "setHoveredMaterial"; index: number | null }
@@ -58,6 +59,7 @@ export function reducer(state: GuideState, action: Action): GuideState {
         ...(p.varInputs !== undefined && { varInputs: p.varInputs }),
         ...(p.validationErrors !== undefined && { validationErrors: p.validationErrors }),
         ...(p.validatedFields !== undefined && { validatedFields: p.validatedFields }),
+        ...(p.varAttempts !== undefined && { varAttempts: p.varAttempts }),
         ...(p.materialsChecked !== undefined && { materialsChecked: p.materialsChecked }),
         ...(p.setupChecked !== undefined && { setupChecked: p.setupChecked }),
         ...(p.rows !== undefined && { rows: p.rows }),
@@ -133,6 +135,9 @@ export function reducer(state: GuideState, action: Action): GuideState {
 
     case "clearValidatedFields":
       return { ...state, validatedFields: {} };
+
+    case "incrementVarAttempts":
+      return { ...state, varAttempts: state.varAttempts + 1 };
 
     case "toggleMaterial": {
       const updated = [...state.materialsChecked];
@@ -212,6 +217,7 @@ export function extractPersistedSlice(state: GuideState): PersistedLabGuideState
     varInputs: state.varInputs,
     validationErrors: state.validationErrors,
     validatedFields: state.validatedFields,
+    varAttempts: state.varAttempts,
     materialsChecked: state.materialsChecked,
     setupChecked: state.setupChecked,
     rows: state.rows,
