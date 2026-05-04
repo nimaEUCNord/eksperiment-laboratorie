@@ -45,6 +45,8 @@ export type Action =
   | { type: "removeRow"; index: number }
   | { type: "updateConstant"; variable: string; value: string }
   | { type: "setStudentValue"; value: string }
+  | { type: "setChartXAxis"; field: string | undefined }
+  | { type: "setChartYAxis"; field: string | undefined }
   | { type: "updateReflection"; index: number; value: string }
   | { type: "toggleHint"; id: string }
   | { type: "setShowFacit"; value: boolean }
@@ -77,6 +79,8 @@ export function reducer(state: GuideState, action: Action): GuideState {
         ...(p.studentValue !== undefined && { studentValue: p.studentValue }),
         ...(p.reflections !== undefined && { reflections: p.reflections }),
         ...(p.mode !== undefined && { mode: p.mode }),
+        ...(p.chartXAxis !== undefined && { chartXAxis: p.chartXAxis }),
+        ...(p.chartYAxis !== undefined && { chartYAxis: p.chartYAxis }),
       };
     }
 
@@ -221,6 +225,12 @@ export function reducer(state: GuideState, action: Action): GuideState {
     case "setStudentValue":
       return { ...state, studentValue: action.value };
 
+    case "setChartXAxis":
+      return { ...state, chartXAxis: action.field };
+
+    case "setChartYAxis":
+      return { ...state, chartYAxis: action.field };
+
     case "updateReflection":
       return {
         ...state,
@@ -268,5 +278,7 @@ export function extractPersistedSlice(state: GuideState): PersistedLabGuideState
     studentValue: state.studentValue,
     reflections: state.reflections,
     mode: state.mode || "guidet",
+    chartXAxis: state.chartXAxis,
+    chartYAxis: state.chartYAxis,
   };
 }

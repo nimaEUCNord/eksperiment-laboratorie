@@ -73,7 +73,18 @@ export const templateForsog: LabConfig = {
         expectedUnit: ["m/s²", "m/s^2", "N/kg"],
       },
     ],
+    chart: {
+      xField: "Uafhængig variabel",
+      yField: "Afhængig variabel",
+      xLabel: "Masse m (kg)",
+      yLabel: "Kraft F (N)",
+      fitMode: "through-origin",
+      slopeSymbol: "g",
+      slopeUnit: "m/s²",
+      minPoints: 4,
+    },
     theoreticalValue: 9.82,
+    theoreticalValueUnit: "m/s²",
     deviationThreshold: 1,
     reflectionQuestions: [
       "1. Stemmer dine resultater overens med hypotesen? Beskriv hvilke mønstre du observerede.",

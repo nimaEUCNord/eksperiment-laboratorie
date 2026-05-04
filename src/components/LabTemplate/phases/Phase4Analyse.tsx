@@ -34,7 +34,41 @@ export default function Phase4Analyse({
         simKey={simKey}
       />
 
-      {guide.chart && <MeasurementChart rows={phase4.rows} chart={guide.chart} />}
+      {guide.chart && phase4.effectiveChart && (
+        <div className="space-y-3">
+          <div className="flex flex-wrap gap-4">
+            <label className="flex-1 min-w-[160px]">
+              <span className="block text-xs font-medium text-slate-600 mb-1">X-akse</span>
+              <select
+                value={phase4.chartXAxis}
+                onChange={(e) => phase4.setChartXAxis(e.target.value)}
+                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 font-mono text-sm text-slate-700 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+              >
+                {phase4.axisOptions.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="flex-1 min-w-[160px]">
+              <span className="block text-xs font-medium text-slate-600 mb-1">Y-akse</span>
+              <select
+                value={phase4.chartYAxis}
+                onChange={(e) => phase4.setChartYAxis(e.target.value)}
+                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 font-mono text-sm text-slate-700 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+              >
+                {phase4.axisOptions.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <MeasurementChart rows={phase4.rows} chart={phase4.effectiveChart} />
+        </div>
+      )}
 
       <div className="space-y-4">
         {phase4.theoretical !== undefined && (

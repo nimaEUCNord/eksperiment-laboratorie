@@ -53,6 +53,8 @@ export function buildInitialPersistedSlice(guide: LabGuide): PersistedSlice {
       () => "",
     ),
     mode: null,
+    chartXAxis: undefined,
+    chartYAxis: undefined,
   };
 }
 

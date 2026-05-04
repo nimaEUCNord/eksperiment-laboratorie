@@ -9,7 +9,6 @@ Last updated: 2026-05-04 (revised)
 - [ ] Phase 3 data export to CSV/Excel — Add button in Phase 3 to export measurement data, constants, and metadata so students can save their data for further analysis. Offer CSV as the simple option and Excel (.xlsx) for a structured file with headers and calculated values.
 - [ ] Remove "fx" placeholder hints from Phase 1 variable input fields — The example text in the variable fields may be giving too much away; remove or replace with neutral placeholders.
 - [ ] Make hints and attempts visually consistent across all Tjek interactions — Currently the feedback UI (attempt counter, hint text, correct/wrong highlighting) differs between Tjek Variabler and Tjek Hypotese in Phase 1. Unify into a shared visual language.
-- [ ] Add graph canvas to Phase 4 (Analysér) — Students should be able to plot their Phase 3 measurements directly in Phase 4 to visually analyse the relationship between variables. Consider using the existing `MeasurementChart` component with the lab's `ChartConfig`.
 
 ## 💡 Ideas (Backlog)
 - [ ] Offline mode — Enable the site to function without internet access (e.g. service worker / PWA caching) so students can run lab guides in classrooms with poor connectivity.
@@ -30,4 +29,5 @@ Last updated: 2026-05-04 (revised)
 - 
 
 ## ✅ Completed (Archive)
+- [x] Add graph canvas to Phase 4 (Analysér) — `MeasurementChart` now renders inside Phase 4 with X-akse/Y-akse dropdowns when `guide.chart` is set. Selection persists (schema v4) and falls back to configured defaults when the picked pair isn't the original.
 - [x] Phase progress bar navigation enforces the same locks as "Næste fase" — `handleProgressBarSelect` in the orchestrator calls the phase's registered validated-advance handler for forward navigation; backward always allowed.
