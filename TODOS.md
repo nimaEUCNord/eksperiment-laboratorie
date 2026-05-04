@@ -9,7 +9,6 @@ Last updated: 2026-05-04 (revised)
 - [ ] Phase 3 data export to CSV/Excel — Add button in Phase 3 to export measurement data, constants, and metadata so students can save their data for further analysis. Offer CSV as the simple option and Excel (.xlsx) for a structured file with headers and calculated values.
 - [ ] Remove "fx" placeholder hints from Phase 1 variable input fields — The example text in the variable fields may be giving too much away; remove or replace with neutral placeholders.
 - [ ] Make hints and attempts visually consistent across all Tjek interactions — Currently the feedback UI (attempt counter, hint text, correct/wrong highlighting) differs between Tjek Variabler and Tjek Hypotese in Phase 1. Unify into a shared visual language.
-- [ ] "Nulstil arbejde" should return to inquiry type selection — After confirming the reset, clear all persisted state and navigate back to the `PhaseChooser` screen so students can pick a new scaffolding mode from scratch.
 
 ## 💡 Ideas (Backlog)
 - [ ] Offline mode — Enable the site to function without internet access (e.g. service worker / PWA caching) so students can run lab guides in classrooms with poor connectivity.
