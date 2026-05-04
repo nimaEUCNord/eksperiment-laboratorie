@@ -53,7 +53,7 @@ export default function Phase2Setup({
         embedIn={guide.embedSimulationInPhases ?? []}
       />
 
-      {mode === "guidet" && guide.materials && (
+      {guide.materials && (
         <div className="space-y-2">
           <p className="text-sm font-medium text-slate-700">Materialer:</p>
           <div className="flex gap-6">
