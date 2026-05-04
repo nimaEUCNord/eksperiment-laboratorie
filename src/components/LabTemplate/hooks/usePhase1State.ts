@@ -3,6 +3,8 @@ import type { LabGuide, Variable } from "@/content/types";
 import type { Action, GuideState } from "../state/reducer";
 import type { ValidationErrors, VarField } from "../types";
 
+const MAX_ATTEMPTS = 4;
+
 function checkAnswer(
   studentAnswer: string,
   expectedValue: string | string[] | undefined,
@@ -33,13 +35,31 @@ export function usePhase1State(
   dispatch: Dispatch<Action>,
   guide: LabGuide,
 ) {
+  const isAttemptsExhausted = state.varAttempts >= MAX_ATTEMPTS;
+  const attemptsLeft = MAX_ATTEMPTS - state.varAttempts;
+  const isHypAttemptsExhausted = state.hypAttempts >= MAX_ATTEMPTS;
+  const hypAttemptsLeft = MAX_ATTEMPTS - state.hypAttempts;
+
   const setHypothesis = (value: string) => dispatch({ type: "setHypothesis", value });
+
+  const checkHypothesis = (): boolean => {
+    const keywords = guide.hypothesisKeywords ?? [];
+    if (keywords.length === 0) return true;
+    const text = state.hypothesis.toLowerCase();
+    const missing = keywords.filter((kw) => !text.includes(kw.toLowerCase()));
+    dispatch({ type: "setHypothesisCheckResult", missing });
+    if (missing.length > 0 && guide.blockOnWrongHypothesis && state.hypAttempts < MAX_ATTEMPTS) {
+      dispatch({ type: "incrementHypAttempts" });
+    }
+    return missing.length === 0;
+  };
 
   const setVariableField = (variable: string, field: VarField, value: string) =>
     dispatch({ type: "setVariableField", variable, field, value });
 
   const validateField = (variableName: string, field: VarField) => {
     if (!guide.validateVariableInputs || !guide.variables) return;
+    if (!state.varCheckPressed) return;
     const variable = guide.variables.find((v) => v.name === variableName);
     if (!variable) return;
     const input = state.varInputs[variableName] || {
@@ -82,7 +102,16 @@ export function usePhase1State(
       allValidated[variable.name] = new Set<VarField>(["fysiskStorrelse", "symbol", "enhed"]);
     });
     dispatch({ type: "validateAll", errors, validated: allValidated });
+    dispatch({ type: "setVarCheckPressed", value: true });
     return !hasErrors;
+  };
+
+  const checkVariables = (): boolean => {
+    const isValid = validateAll();
+    if (!isValid && guide.blockOnWrongVariableInputs && state.varAttempts < MAX_ATTEMPTS) {
+      dispatch({ type: "incrementVarAttempts" });
+    }
+    return isValid;
   };
 
   const checkConditions = (): boolean => {
@@ -114,11 +143,22 @@ export function usePhase1State(
     varInputs: state.varInputs,
     validationErrors: state.validationErrors,
     validatedFields: state.validatedFields,
+    varAttempts: state.varAttempts,
+    varCheckPressed: state.varCheckPressed,
+    isAttemptsExhausted,
+    attemptsLeft,
+    hypAttempts: state.hypAttempts,
+    hypothesisChecked: state.hypothesisChecked,
+    hypothesisMissingKeywords: state.hypothesisMissingKeywords,
+    isHypAttemptsExhausted,
+    hypAttemptsLeft,
     mode: state.mode,
     setHypothesis,
     setVariableField,
     validateField,
     validateAll,
+    checkVariables,
+    checkHypothesis,
     checkConditions,
     isAdvanceBlockedByValidation,
   };

@@ -22,6 +22,9 @@ export type Action =
   | { type: "setMode"; mode: Mode | null }
   | { type: "setPhase"; phase: Phase }
   | { type: "setHypothesis"; value: string }
+  | { type: "setHypothesisCheckResult"; missing: string[] }
+  | { type: "incrementHypAttempts" }
+  | { type: "clearHypothesisCheck" }
   | { type: "setVariableField"; variable: string; field: VarField; value: string }
   | { type: "setFieldValidation"; variable: string; field: VarField; isError: boolean }
   | { type: "markFieldValidated"; variable: string; field: VarField }
@@ -32,6 +35,8 @@ export type Action =
       validated: Record<string, Set<VarField>>;
     }
   | { type: "clearValidatedFields" }
+  | { type: "incrementVarAttempts" }
+  | { type: "setVarCheckPressed"; value: boolean }
   | { type: "toggleMaterial"; index: number }
   | { type: "toggleSetup"; index: number }
   | { type: "setHoveredMaterial"; index: number | null }
@@ -55,9 +60,16 @@ export function reducer(state: GuideState, action: Action): GuideState {
       return {
         ...state,
         ...(p.hypothesis !== undefined && { hypothesis: p.hypothesis }),
+        ...(p.hypAttempts !== undefined && { hypAttempts: p.hypAttempts }),
+        ...(p.hypothesisChecked !== undefined && { hypothesisChecked: p.hypothesisChecked }),
+        ...(p.hypothesisMissingKeywords !== undefined && {
+          hypothesisMissingKeywords: p.hypothesisMissingKeywords,
+        }),
         ...(p.varInputs !== undefined && { varInputs: p.varInputs }),
         ...(p.validationErrors !== undefined && { validationErrors: p.validationErrors }),
         ...(p.validatedFields !== undefined && { validatedFields: p.validatedFields }),
+        ...(p.varAttempts !== undefined && { varAttempts: p.varAttempts }),
+        ...(p.varCheckPressed !== undefined && { varCheckPressed: p.varCheckPressed }),
         ...(p.materialsChecked !== undefined && { materialsChecked: p.materialsChecked }),
         ...(p.setupChecked !== undefined && { setupChecked: p.setupChecked }),
         ...(p.rows !== undefined && { rows: p.rows }),
@@ -78,16 +90,42 @@ export function reducer(state: GuideState, action: Action): GuideState {
       return { ...state, phase: action.phase };
 
     case "setHypothesis":
-      return { ...state, hypothesis: action.value };
+      return {
+        ...state,
+        hypothesis: action.value,
+        hypothesisChecked: false,
+        hypothesisMissingKeywords: [],
+      };
+
+    case "setHypothesisCheckResult":
+      return {
+        ...state,
+        hypothesisChecked: true,
+        hypothesisMissingKeywords: action.missing,
+      };
+
+    case "incrementHypAttempts":
+      return { ...state, hypAttempts: state.hypAttempts + 1 };
+
+    case "clearHypothesisCheck":
+      return { ...state, hypothesisChecked: false, hypothesisMissingKeywords: [] };
 
     case "setVariableField": {
       const existing = state.varInputs[action.variable] ?? EMPTY_VAR_INPUT;
+      const validatedSet = state.validatedFields[action.variable];
+      let nextValidatedFields = state.validatedFields;
+      if (validatedSet?.has(action.field)) {
+        const next = new Set(validatedSet);
+        next.delete(action.field);
+        nextValidatedFields = { ...state.validatedFields, [action.variable]: next };
+      }
       return {
         ...state,
         varInputs: {
           ...state.varInputs,
           [action.variable]: { ...existing, [action.field]: action.value },
         },
+        validatedFields: nextValidatedFields,
       };
     }
 
@@ -132,7 +170,13 @@ export function reducer(state: GuideState, action: Action): GuideState {
       };
 
     case "clearValidatedFields":
-      return { ...state, validatedFields: {} };
+      return { ...state, validatedFields: {}, varCheckPressed: false };
+
+    case "incrementVarAttempts":
+      return { ...state, varAttempts: state.varAttempts + 1 };
+
+    case "setVarCheckPressed":
+      return { ...state, varCheckPressed: action.value };
 
     case "toggleMaterial": {
       const updated = [...state.materialsChecked];
@@ -209,9 +253,14 @@ export function reducer(state: GuideState, action: Action): GuideState {
 export function extractPersistedSlice(state: GuideState): PersistedLabGuideState {
   return {
     hypothesis: state.hypothesis,
+    hypAttempts: state.hypAttempts,
+    hypothesisChecked: state.hypothesisChecked,
+    hypothesisMissingKeywords: state.hypothesisMissingKeywords,
     varInputs: state.varInputs,
     validationErrors: state.validationErrors,
     validatedFields: state.validatedFields,
+    varAttempts: state.varAttempts,
+    varCheckPressed: state.varCheckPressed,
     materialsChecked: state.materialsChecked,
     setupChecked: state.setupChecked,
     rows: state.rows,

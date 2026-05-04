@@ -32,9 +32,14 @@ export function buildInitialPersistedSlice(guide: LabGuide): PersistedSlice {
   const setupItems = guide.setupItems ?? DEFAULT_SETUP_ITEMS;
   return {
     hypothesis: "",
+    hypAttempts: 0,
+    hypothesisChecked: false,
+    hypothesisMissingKeywords: [],
     varInputs: {},
     validationErrors: {},
     validatedFields: {},
+    varAttempts: 0,
+    varCheckPressed: false,
     materialsChecked: Array.from(
       { length: guide.materials?.length || 0 },
       () => false,

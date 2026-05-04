@@ -14,7 +14,7 @@ interface LabPageContentProps {
 }
 
 export default function LabPageContent({ lab, accent }: LabPageContentProps) {
-  const [expandBackground, setExpandBackground] = useState(true);
+  const [expandBackground, setExpandBackground] = useState(!lab.guide);
   const [expandSimulation, setExpandSimulation] = useState(false);
 
   return (

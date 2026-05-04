@@ -27,10 +27,18 @@ export const templateForsog: LabConfig = {
     hypothesis:
       "Det forventes, at tyngdekraften er ligefrem proportional med massen og at hældningstallet er lig med tyngdeaccelerationen $g=9,82 m/s^2$",
     hypothesisPlaceholder: "Det forventes, at ... og at hældningstallet bliver ...",
+    hypothesisKeywords: ["masse", "kraft"],
+    hypothesisHints: [
+      "Hvilke to fysiske størrelser undersøger du sammenhængen mellem?",
+      "Tænk på hvad der hænger i fjederen, og hvilken påvirkning det giver.",
+      "Brug ordene \"masse\" og \"kraft\" i din hypotese, fx \"tyngdekraften vokser, når massen vokser\".",
+    ],
+    validateHypothesis: true,
+    blockOnWrongHypothesis: true,
     validateVariableInputs: true,
-    blockOnWrongVariableInputs: false,
+    blockOnWrongVariableInputs: true,
     blockOnMissingConstants: true,
-    bypassLocks: true,
+    bypassLocks: false,
     minMeasurements: 4,
     suggestedMeasurements: 6,
     variables: [

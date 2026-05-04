@@ -8,6 +8,7 @@ interface VariableInputRowProps {
   validatedSet: Set<VarField> | undefined;
   validateInputs: boolean;
   mode: Mode;
+  showAnswers?: boolean;
   onChange: (field: VarField, value: string) => void;
   onBlur: (field: VarField) => void;
 }
@@ -26,6 +27,7 @@ export default function VariableInputRow({
   validatedSet,
   validateInputs,
   mode,
+  showAnswers,
   onChange,
   onBlur,
 }: VariableInputRowProps) {
@@ -46,6 +48,7 @@ export default function VariableInputRow({
           isError={errors.fysiskStorrelse}
           validated={validatedSet?.has("fysiskStorrelse") && validateInputs && !!v.expectedPhysicalQuantity}
           mode={mode}
+          showAnswers={showAnswers}
           expected={v.expectedPhysicalQuantity}
         />
         <Field
@@ -57,6 +60,7 @@ export default function VariableInputRow({
           isError={errors.symbol}
           validated={validatedSet?.has("symbol") && validateInputs && !!v.expectedSymbol}
           mode={mode}
+          showAnswers={showAnswers}
           expected={v.expectedSymbol}
         />
         <Field
@@ -68,6 +72,7 @@ export default function VariableInputRow({
           isError={errors.enhed}
           validated={validatedSet?.has("enhed") && validateInputs && !!v.expectedUnit}
           mode={mode}
+          showAnswers={showAnswers}
           expected={v.expectedUnit}
         />
       </div>
@@ -84,10 +89,11 @@ interface FieldProps {
   isError: boolean;
   validated: boolean | undefined;
   mode: Mode;
+  showAnswers?: boolean;
   expected: string | string[] | undefined;
 }
 
-function Field({ label, placeholder, value, onChange, onBlur, isError, validated, mode, expected }: FieldProps) {
+function Field({ label, placeholder, value, onChange, onBlur, isError, validated, mode, showAnswers, expected }: FieldProps) {
   return (
     <div>
       <label className="block text-xs font-medium text-slate-700">{label}</label>
@@ -98,23 +104,21 @@ function Field({ label, placeholder, value, onChange, onBlur, isError, validated
         onBlur={onBlur}
         placeholder={placeholder}
         className={`mt-1 w-full rounded-lg border px-2 py-1.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 ${
-          isError ? "border-red-300 focus:ring-red-400" : "border-slate-200 focus:ring-sky-400"
+          validated && !isError
+            ? "border-emerald-300 focus:ring-emerald-400"
+            : "border-slate-200 focus:ring-sky-400"
         }`}
       />
-      {validated && (
+      {validated && !isError && (
         <div className="mt-1 flex items-center gap-1">
-          {isError ? (
-            <>
-              <span className="text-sm text-red-500">✗</span>
-              {mode === "guidet" && expected && (
-                <span className="text-xs text-red-500">
-                  Forventet: {Array.isArray(expected) ? expected.join(" eller ") : expected}
-                </span>
-              )}
-            </>
-          ) : (
-            <span className="text-sm text-green-500">✓</span>
-          )}
+          <span className="text-sm text-green-500">✓</span>
+        </div>
+      )}
+      {validated && isError && showAnswers && (mode === "guidet" || showAnswers) && expected && (
+        <div className="mt-1 flex items-center gap-1">
+          <span className="text-xs text-slate-500">
+            Forventet: {Array.isArray(expected) ? expected.join(" eller ") : expected}
+          </span>
         </div>
       )}
     </div>

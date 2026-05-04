@@ -56,36 +56,42 @@ export function SimulationFrame<P extends SketchProps>({
   const sketchProps = buildSketchProps(values);
   const statRow = stats?.(values) ?? [];
 
+  const hasControls = selects.length > 0 || sliders.length > 0;
+
   return (
     <div className="space-y-4">
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white [&_canvas]:block [&_canvas]:h-auto [&_canvas]:max-w-full [&_canvas:not(:last-of-type)]:hidden">
-        <P5Canvas sketch={sketch} {...(sketchProps as P)} />
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
+        <div className="w-fit max-w-full overflow-hidden rounded-xl border border-slate-200 bg-white [&_canvas]:block [&_canvas]:h-auto [&_canvas]:max-w-full [&_canvas:not(:last-of-type)]:hidden">
+          <P5Canvas sketch={sketch} {...(sketchProps as P)} />
+        </div>
+
+        {hasControls && (
+          <div className="grid grid-cols-1 gap-5 rounded-xl border border-slate-200 bg-white p-5 sm:grid-cols-2 lg:w-80 lg:shrink-0 lg:grid-cols-1">
+            {selects.map((select) => (
+              <SelectField
+                key={select.key}
+                select={select}
+                value={values[select.key]}
+                onChange={(v) =>
+                  setValues((prev) => ({ ...prev, [select.key]: v }))
+                }
+              />
+            ))}
+            {sliders.map((slider) => (
+              <SliderField
+                key={slider.key}
+                slider={slider}
+                value={values[slider.key]}
+                onChange={(v) =>
+                  setValues((prev) => ({ ...prev, [slider.key]: v }))
+                }
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {statRow.length > 0 && <StatRow stats={statRow} />}
-
-      <div className="grid grid-cols-1 gap-5 rounded-xl border border-slate-200 bg-white p-5 sm:grid-cols-2">
-        {selects.map((select) => (
-          <SelectField
-            key={select.key}
-            select={select}
-            value={values[select.key]}
-            onChange={(v) =>
-              setValues((prev) => ({ ...prev, [select.key]: v }))
-            }
-          />
-        ))}
-        {sliders.map((slider) => (
-          <SliderField
-            key={slider.key}
-            slider={slider}
-            value={values[slider.key]}
-            onChange={(v) =>
-              setValues((prev) => ({ ...prev, [slider.key]: v }))
-            }
-          />
-        ))}
-      </div>
     </div>
   );
 }
