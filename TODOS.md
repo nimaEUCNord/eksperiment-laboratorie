@@ -1,6 +1,6 @@
 # Development Todos & Ideas
 
-Last updated: 2026-05-02
+Last updated: 2026-05-04
 
 ## 🎯 Features (Next)
 - [ ] Choose simulation option when choosing inquiry type — When a lab has a `simulationId` and `embedSimulationInPhases` set, let students toggle simulation use during the mode-selection screen, before entering Phase 1
@@ -9,7 +9,6 @@ Last updated: 2026-05-02
 - [ ] Phase 3 data export to CSV/Excel — Add button in Phase 3 to export measurement data, constants, and metadata so students can save their data for further analysis. Offer CSV as the simple option and Excel (.xlsx) for a structured file with headers and calculated values.
 - [ ] Remove "fx" placeholder hints from Phase 1 variable input fields — The example text in the variable fields may be giving too much away; remove or replace with neutral placeholders.
 - [ ] Make hints and attempts visually consistent across all Tjek interactions — Currently the feedback UI (attempt counter, hint text, correct/wrong highlighting) differs between Tjek Variabler and Tjek Hypotese in Phase 1. Unify into a shared visual language.
-- [ ] Phase progress bar navigation should enforce the same locks as "Næste fase" — Clicking a phase in the progress bar currently bypasses progression requirements that the Næste fase button enforces. The two paths should apply identical validation before allowing the jump.
 - [ ] Add graph canvas to Phase 4 (Analysér) — Students should be able to plot their Phase 3 measurements directly in Phase 4 to visually analyse the relationship between variables. Consider using the existing `MeasurementChart` component with the lab's `ChartConfig`.
 
 ## 💡 Ideas (Backlog)
@@ -26,3 +25,4 @@ Last updated: 2026-05-02
 - 
 
 ## ✅ Completed (Archive)
+- [x] Phase progress bar navigation enforces the same locks as "Næste fase" — `handleProgressBarSelect` in the orchestrator calls the phase's registered validated-advance handler for forward navigation; backward always allowed.
