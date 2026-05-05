@@ -1,15 +1,16 @@
 import type { LabConfig } from "@/content/types";
-import linealImg from "@/assets/images/equipment/template-forsog/lineal.webp";
-import digitalvaegImg from "@/assets/images/equipment/template-forsog/digitalvaegt.webp";
-import newtonmeterImg from "@/assets/images/equipment/template-forsog/newtonmeter.webp";
-import slidslodderImg from "@/assets/images/equipment/template-forsog/slidslodder10x10g.webp";
-import stativfodImg from "@/assets/images/equipment/template-forsog/stativfod.webp";
-import stativstangImg from "@/assets/images/equipment/template-forsog/Stativstang.webp";
-import stativmuffeImg from "@/assets/images/equipment/template-forsog/stativmuffe.webp";
+import linealImg from "@/assets/images/equipment/template-lab/lineal.webp";
+import digitalvaegImg from "@/assets/images/equipment/template-lab/digitalvaegt.webp";
+import newtonmeterImg from "@/assets/images/equipment/template-lab/newtonmeter.webp";
+import slidslodderImg from "@/assets/images/equipment/template-lab/slidslodder10x10g.webp";
+import stativfodImg from "@/assets/images/equipment/template-lab/stativfod.webp";
+import stativstangImg from "@/assets/images/equipment/template-lab/Stativstang.webp";
+import stativmuffeImg from "@/assets/images/equipment/template-lab/stativmuffe.webp";
 
-export const templateForsog: LabConfig = {
-  slug: "template-forsog",
-  title: "Testforsøg",
+export const templateLab: LabConfig = {
+  kind: "guided",
+  slug: "template-lab",
+  title: "Skabelonforsøg",
   shortDescription: "Viser alle sektion og 6-fase struktur med generisk guide",
   goal: "At undersøge sammenhængen mellem masse og tyngdekraft, og bestemme tyngdeaccelerationen ud fra data",
   keyConcepts: [
@@ -18,7 +19,7 @@ export const templateForsog: LabConfig = {
     "Eksperimentel bestemmelse af tyngdeaccelerationen",
   ],
   keyEquation: "F_t = m \\cdot g",
-  simulationId: "template-forsog",
+  simulationId: "template-lab",
   theory: [
     "Et lod, med massen $m$, der hænger i et dynamometer, er påvirket af Jordens tyngdekraft $F_t$. Når loddet hænger stille, måler dynamometeret en kraft, der er lige så stor som tyngdekraften på loddet. Denne kraft kaldes også loddets vægt.", "Der er en direkte proportionalitet mellem tyngdekraften og massen. Sammenhængen kan skrives som $$F_t = m \\cdot g$$ hvor kraften måles i newton, $\\mathrm{N}$, og massen måles i kilogram, $\\mathrm{kg}$. Proportionalitetskonstanten $g$ kaldes tyngdeaccelerationen. I Danmark er  den ca. $9,82$ $\\mathrm{m/s^2}$.","I forsøget tilføjes forskellige masser til dynamometeret, og den tilhørende kraft aflæses. Når resultaterne afbildes i en graf med massen på $x$-aksen og kraften på $y$-aksen, forventes målepunkterne at ligge tæt på en ret linje gennem begyndelsespunktet. Linjens hældning svarer til tyngdeaccelerationen $g$. Derfor kan tyngdeaccelerationen bestemmes eksperimentelt ved at finde hældningen af den bedste rette linje gennem målepunkterne.",
   ],

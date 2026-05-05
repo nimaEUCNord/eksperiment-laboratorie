@@ -1,5 +1,5 @@
 import type { Dispatch } from "react";
-import type { LabConfig, LabGuide, PhaseId } from "@/content/types";
+import type { GuidedLab, LabGuide, PhaseId } from "@/content/types";
 import type { AccentClasses } from "@/lib/accent";
 import type { Action, GuideState } from "./state/reducer";
 
@@ -35,7 +35,7 @@ export const PHASES: ReadonlyArray<{
 export interface PhaseProps {
   state: GuideState;
   dispatch: Dispatch<Action>;
-  lab: LabConfig;
+  lab: GuidedLab;
   guide: LabGuide;
   accent: AccentClasses;
   simKey: number;

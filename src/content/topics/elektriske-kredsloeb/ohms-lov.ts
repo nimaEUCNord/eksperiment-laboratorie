@@ -1,6 +1,7 @@
 import type { LabConfig } from "@/content/types";
 
 export const ohmsLov: LabConfig = {
+  kind: "simulation",
   slug: "ohms-lov",
   title: "Ohms lov",
   shortDescription:

@@ -1,6 +1,7 @@
 import type { LabConfig } from "@/content/types";
 
 export const spesifikVarmekapacitet: LabConfig = {
+  kind: "simulation",
   slug: "specifik-varmekapacitet",
   title: "Specifik varmekapacitet",
   shortDescription:

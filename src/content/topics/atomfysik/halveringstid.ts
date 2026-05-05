@@ -1,6 +1,7 @@
 import type { LabConfig } from "@/content/types";
 
 export const halveringstid: LabConfig = {
+  kind: "simulation",
   slug: "halveringstid",
   title: "Halveringstid for radioaktivt henfald",
   shortDescription:

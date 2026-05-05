@@ -14,7 +14,8 @@ interface LabPageContentProps {
 }
 
 export default function LabPageContent({ lab, accent }: LabPageContentProps) {
-  const [expandBackground, setExpandBackground] = useState(!lab.guide);
+  const isGuided = lab.kind === "guided";
+  const [expandBackground, setExpandBackground] = useState(!isGuided);
   const [expandSimulation, setExpandSimulation] = useState(false);
   const [simKey, setSimKey] = useState(0);
   const resetSim = () => setSimKey((k) => k + 1);
@@ -22,7 +23,7 @@ export default function LabPageContent({ lab, accent }: LabPageContentProps) {
   return (
     <>
       {/* Background sections - collapsible when a guide is present */}
-      {lab.guide && (
+      {isGuided && (
         <div className="mt-10">
           <button
             onClick={() => setExpandBackground(!expandBackground)}
@@ -92,28 +93,39 @@ export default function LabPageContent({ lab, accent }: LabPageContentProps) {
         </>
       )}
 
-      {/* Simulation dropdown — placeholder slot above the lab guide */}
-      {lab.guide && (
-        <div className="mt-10">
-          <button
-            onClick={() => setExpandSimulation(!expandSimulation)}
-            className="flex w-full items-center gap-2 rounded-xl border border-slate-200 bg-white p-4 text-left hover:bg-slate-50"
-          >
-            <span className="text-lg">{expandSimulation ? "▼" : "▶"}</span>
-            <span className="font-semibold text-slate-900">
-              {expandSimulation ? "Skjul" : "Vis"} simulation
-            </span>
-          </button>
-          {expandSimulation && (
-            <div className="mt-4">
-              <Simulation key={simKey} simulationId={lab.simulationId} resetKey={simKey} />
-            </div>
-          )}
-        </div>
+      {/* Main content — one branch per kind */}
+      {lab.kind === "guided" && (
+        <>
+          <div className="mt-10">
+            <button
+              onClick={() => setExpandSimulation(!expandSimulation)}
+              className="flex w-full items-center gap-2 rounded-xl border border-slate-200 bg-white p-4 text-left hover:bg-slate-50"
+            >
+              <span className="text-lg">{expandSimulation ? "▼" : "▶"}</span>
+              <span className="font-semibold text-slate-900">
+                {expandSimulation ? "Skjul" : "Vis"} simulation
+              </span>
+            </button>
+            {expandSimulation && (
+              <div className="mt-4">
+                <Simulation key={simKey} simulationId={lab.simulationId} resetKey={simKey} />
+              </div>
+            )}
+          </div>
+
+          <section className="mt-10">
+            <LabTemplate
+              lab={lab}
+              guide={lab.guide}
+              accent={accent}
+              simKey={simKey}
+              onResetSim={resetSim}
+            />
+          </section>
+        </>
       )}
 
-      {/* Plain simulation section — only when there's no guide */}
-      {!lab.guide && lab.simulationId && (
+      {lab.kind === "simulation" && (
         <section className="mt-10">
           <h2 className="text-xl font-semibold text-slate-900">Simulation</h2>
           <p className="mt-2 text-sm text-slate-600">
@@ -126,8 +138,7 @@ export default function LabPageContent({ lab, accent }: LabPageContentProps) {
         </section>
       )}
 
-      {/* Lab observations — only when there's no guide */}
-      {!lab.guide && lab.observations && lab.observations.length > 0 ? (
+      {lab.kind === "observations" && lab.observations.length > 0 && (
         <section className="mt-10">
           <h2 className="text-xl font-semibold text-slate-900">I laboratoriet</h2>
           <p className="mt-2 text-sm text-slate-600">
@@ -147,19 +158,6 @@ export default function LabPageContent({ lab, accent }: LabPageContentProps) {
               </li>
             ))}
           </ol>
-        </section>
-      ) : null}
-
-      {/* Lab guide section */}
-      {lab.guide && (
-        <section className="mt-10">
-          <LabTemplate
-            lab={lab}
-            guide={lab.guide}
-            accent={accent}
-            simKey={simKey}
-            onResetSim={resetSim}
-          />
         </section>
       )}
     </>

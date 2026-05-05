@@ -1,6 +1,7 @@
 import type { LabConfig } from "@/content/types";
 
 export const newtons2Lov: LabConfig = {
+  kind: "simulation",
   slug: "newtons-2-lov",
   title: "Newtons 2. lov",
   shortDescription:

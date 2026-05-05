@@ -1,6 +1,7 @@
 import type { LabConfig } from "@/content/types";
 
 export const lydenHastighed: LabConfig = {
+  kind: "simulation",
   slug: "lydens-hastighed",
   title: "Lydens hastighed",
   shortDescription:

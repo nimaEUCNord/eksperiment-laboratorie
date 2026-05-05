@@ -1,6 +1,7 @@
 import type { LabConfig } from "@/content/types";
 
 export const emissionsspektrum: LabConfig = {
+  kind: "simulation",
   slug: "emissionsspektrum",
   title: "Brintatomets emissionsspektrum",
   shortDescription:

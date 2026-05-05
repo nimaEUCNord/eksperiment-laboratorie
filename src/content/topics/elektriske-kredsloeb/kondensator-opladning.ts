@@ -1,6 +1,7 @@
 import type { LabConfig } from "@/content/types";
 
 export const kondensatorOpladning: LabConfig = {
+  kind: "simulation",
   slug: "kondensator-opladning",
   title: "Kondensator opladning og afladning",
   shortDescription:

@@ -1,6 +1,7 @@
 import type { LabConfig } from "@/content/types";
 
 export const staaendeBoelgerPaaStreng: LabConfig = {
+  kind: "simulation",
   slug: "staaende-boelger-paa-streng",
   title: "Stående bølger på en streng",
   shortDescription:

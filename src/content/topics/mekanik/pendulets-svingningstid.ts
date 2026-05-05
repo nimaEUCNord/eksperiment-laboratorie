@@ -1,6 +1,7 @@
 import type { LabConfig } from "@/content/types";
 
 export const penduletsSvingningstid: LabConfig = {
+  kind: "simulation",
   slug: "pendulets-svingningstid",
   title: "Pendulets svingningstid",
   shortDescription:

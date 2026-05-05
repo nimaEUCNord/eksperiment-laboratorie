@@ -1,6 +1,7 @@
 import type { LabConfig } from "@/content/types";
 
 export const fasovergange: LabConfig = {
+  kind: "simulation",
   slug: "fasovergange",
   title: "Energi ved fasovergange",
   shortDescription:

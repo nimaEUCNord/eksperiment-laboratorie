@@ -1,6 +1,7 @@
 import type { LabConfig } from "@/content/types";
 
 export const boyleMariotte: LabConfig = {
+  kind: "simulation",
   slug: "boyle-mariotte",
   title: "Boyle-Mariottes lov",
   shortDescription:

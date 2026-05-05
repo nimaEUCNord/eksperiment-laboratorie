@@ -1,6 +1,7 @@
 import type { LabConfig } from "@/content/types";
 
 export const effektOgNyttevirkning: LabConfig = {
+  kind: "simulation",
   slug: "effekt-og-nyttevirkning",
   title: "Effekt og nyttevirkning",
   shortDescription:

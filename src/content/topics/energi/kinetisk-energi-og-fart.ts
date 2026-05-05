@@ -1,6 +1,7 @@
 import type { LabConfig } from "@/content/types";
 
 export const kinetiskEnergiOgFart: LabConfig = {
+  kind: "simulation",
   slug: "kinetisk-energi-og-fart",
   title: "Kinetisk energi og fart",
   shortDescription:

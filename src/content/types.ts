@@ -66,7 +66,10 @@ export type LabGuide = {
   bypassLocks?: boolean;
 };
 
-export type LabConfig = {
+// Fields shared by every lab variant. Background sections (goal/keyConcepts/
+// keyEquation/theory) are optional on every kind; missing goal+keyConcepts
+// triggers the "Under udarbejdelse" placeholder regardless of kind.
+type LabBase = {
   slug: string;
   title: string;
   shortDescription: string;
@@ -74,10 +77,27 @@ export type LabConfig = {
   keyConcepts?: string[];
   keyEquation?: string;
   theory?: string[];
-  observations?: string[];
-  simulationId?: string;
-  guide?: LabGuide;
 };
+
+export type StubLab = LabBase & { kind: "stub" };
+
+export type SimulationLab = LabBase & {
+  kind: "simulation";
+  simulationId: string;
+};
+
+export type ObservationsLab = LabBase & {
+  kind: "observations";
+  observations: string[];
+};
+
+export type GuidedLab = LabBase & {
+  kind: "guided";
+  guide: LabGuide;
+  simulationId?: string;
+};
+
+export type LabConfig = StubLab | SimulationLab | ObservationsLab | GuidedLab;
 
 export type AccentColor =
   | "sky"

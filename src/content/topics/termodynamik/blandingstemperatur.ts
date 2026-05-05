@@ -1,6 +1,7 @@
 import type { LabConfig } from "@/content/types";
 
 export const blandingstemperatur: LabConfig = {
+  kind: "simulation",
   slug: "blandingstemperatur",
   title: "Varmeudveksling og blandingstemperatur",
   shortDescription:

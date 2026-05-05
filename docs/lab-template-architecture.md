@@ -4,7 +4,7 @@ Implementation detail for the interactive lab guide system. CLAUDE.md gives the 
 
 ## Lab guide system
 
-Setting `guide: { ... }` on a `LabConfig` replaces the simulation/observations sections with an interactive lab guide. Students choose one of three scaffolding modes:
+Setting `kind: "guided"` with a `guide: { ... }` object on a `LabConfig` activates the interactive lab guide instead of a standalone simulation or observations list. Students choose one of three scaffolding modes:
 
 - **Guidet** — full step-by-step instructions at every phase
 - **Semi-guidet** — brief overview + collapsible hint boxes
@@ -40,7 +40,7 @@ Every phase implements the `PhaseProps` interface (`{ state, dispatch, lab, guid
 - `fitMode` — `"through-origin"` | `"free"` | `"none"`. Controls the best-fit line.
 - `slopeSymbol` / `slopeUnit` — optional, for displaying the fitted slope.
 
-**Canonical example** (from [src/content/topics/test-template/template-forsog.ts](../src/content/topics/test-template/template-forsog.ts)):
+**Canonical example** (from [src/content/topics/template/template-lab.ts](../src/content/topics/template/template-lab.ts)):
 
 ```ts
 chart: {
@@ -71,16 +71,16 @@ The persistence layer is versioned (`SCHEMA_VERSION` in [useLabGuidePersistence.
 ## How to add a new lab
 
 1. Create one file at `src/content/topics/[topic]/[lab-slug].ts` exporting a `LabConfig`. Add it to that topic's `index.ts`.
-2. Set the identity fields (`slug`, `title`, `shortDescription`) plus any background sections (`goal`, `keyConcepts`, `keyEquation`, `theory`).
-3. To enable the interactive guide, add a `guide: LabGuide` object:
+2. Set the discriminator (`kind`) and identity fields (`slug`, `title`, `shortDescription`), plus any background sections (`goal`, `keyConcepts`, `keyEquation`, `theory`). Pick the kind that matches the lab's render mode: `"stub"` (placeholder only), `"simulation"` (standalone sim, requires `simulationId`), `"observations"` (real-lab list, requires `observations`), or `"guided"` (interactive guide, requires `guide`).
+3. For a `kind: "guided"` lab, fill out the `guide: LabGuide` object:
    - **Phase 1**: `hypothesis`, `hypothesisPlaceholder`, `variables` (independent / dependent / control), and validation flags (`validateVariableInputs`, `blockOnWrongVariableInputs`).
    - **Phase 2**: `materials`, optional `materialImages` (typed as `Record<string, StaticImageData>`), `setupItems` (falls back to a generic 5-item list).
    - **Phase 3**: `minMeasurements`, `suggestedMeasurements`, `dataCollectionGuidance`, `blockOnMissingConstants`.
    - **Phase 4**: `chart` (see ChartConfig above), `theoreticalValue` + `theoreticalValueUnit`, `deviationThreshold`.
    - **Phase 5**: `reflectionQuestions`, `facit`.
    - Cross-cutting: `embedSimulationInPhases: ("opstil" | "maal" | "analyser")[]` to inline the sim, `bypassLocks` to disable progression locks.
-4. To embed a simulation, set `simulationId` on the `LabConfig` and register the sim in [Simulation.tsx](../src/components/Simulation.tsx). The simulation is rendered standalone for guide-less labs, or inline within phases listed in `guide.embedSimulationInPhases`.
+4. For a guided lab, you can additionally set `simulationId` and register the sim in [Simulation.tsx](../src/components/Simulation.tsx) — it appears as a collapsible dropdown above the guide, or inline within phases listed in `guide.embedSimulationInPhases`. For a `kind: "simulation"` lab, `simulationId` is required and renders the sim standalone.
 
-[src/content/topics/test-template/template-forsog.ts](../src/content/topics/test-template/template-forsog.ts) is the canonical scaffolded reference.
+[src/content/topics/template/template-lab.ts](../src/content/topics/template/template-lab.ts) is the canonical scaffolded reference.
 
 When designing a new lab guide, use the `/design-lab` skill to generate a filled-out phase scaffold.

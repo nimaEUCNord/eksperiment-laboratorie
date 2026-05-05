@@ -21,7 +21,7 @@ There is no test runner configured.
 
 A preview launch config is committed at `.claude/launch.json` (named `next-dev`); use it with the preview tooling instead of running `next dev` via Bash. **Do not run `npm run build` while the dev server is running** — they fight over `.next/` and corrupt the cache. Stop the dev server first, or use a separate build directory.
 
-**Verification scope.** When verifying changes via the preview tools (preview_start, preview_snapshot, preview_click, preview_screenshot, etc.), only exercise the skabelon lab at `/emner/test-template/template-forsog`. Do not navigate to or interact with production labs unless the user explicitly asks. The skabelon lab is the canonical reference scaffold; production labs contain finalised student content that should not be poked at during verification.
+**Verification scope.** When verifying changes via the preview tools (preview_start, preview_snapshot, preview_click, preview_screenshot, etc.), only exercise the skabelon lab at `/emner/template/template-lab`. Do not navigate to or interact with production labs unless the user explicitly asks. The skabelon lab is the canonical reference scaffold; production labs contain finalised student content that should not be poked at during verification.
 
 ## Available skills
 
@@ -35,6 +35,8 @@ A preview launch config is committed at `.claude/launch.json` (named `next-dev`)
 The content tree is organised hierarchically by topic. Each topic lives in its own directory under [src/content/topics/](src/content/topics/), with one file per lab. All types are defined in [src/content/types.ts](src/content/types.ts); the assembly is in [src/content/index.ts](src/content/index.ts).
 
 **Single source of truth per lab:** every lab is one `LabConfig` object exported from one file. Identity, background sections (goal/theory/keyConcepts), and the optional interactive guide all live in the same object. There is no separate `.config.ts`.
+
+`LabConfig` is a discriminated union keyed on a `kind` field: `"stub" | "simulation" | "observations" | "guided"`. The kind determines which render path the lab uses and which other fields are required (e.g. `kind: "simulation"` requires `simulationId`; `kind: "guided"` requires `guide`). Background fields (`goal`, `keyConcepts`, `keyEquation`, `theory`) are optional on every variant.
 
 **File structure:**
 ```
@@ -51,14 +53,14 @@ src/content/
     ├── boelger/
     ├── atomfysik/
     ├── termodynamik/
-    └── test-template/
+    └── template/
         ├── index.ts
-        └── template-forsog.ts        (canonical reference — full LabConfig with guide)
+        └── template-lab.ts           (canonical reference — full LabConfig with guide)
 ```
 
 To add a lab, create a new file in the appropriate topic's directory (e.g., `src/content/topics/mekanik/my-lab.ts`) exporting a `LabConfig`. Pages are statically generated from this data — there is no CMS.
 
-A stub lab (only `slug`/`title`/`shortDescription` set) renders an "Under udarbejdelse" placeholder. Adding `goal` + `keyConcepts` flips it to fully rendered.
+A `kind: "stub"` lab (or any lab missing both `goal` and `keyConcepts`) renders an "Under udarbejdelse" placeholder. The placeholder is orthogonal to kind — a half-built `kind: "simulation"` lab without background content also shows it.
 
 ### Routing
 
@@ -74,7 +76,7 @@ Simulations are React client components living in `src/components/sims/`. The ro
 
 1. The lab data references a sim by string id (`LabConfig.simulationId`).
 2. [src/components/Simulation.tsx](src/components/Simulation.tsx) maps each id to a `next/dynamic` import with `ssr: false` and a shared `SimulationLoading` fallback. **A new sim must be registered here** or the lab page falls back to a "kommer her" placeholder.
-3. The sim component itself is `"use client"`, wraps `<SimulationFrame>` (which absorbs slider state, the canvas wrapper, and the stat row), and lifts lab-tunable values into a top-of-file `LAB_CONFIG`. [src/components/sims/TemplateForsog.tsx](src/components/sims/TemplateForsog.tsx) is the canonical reference; `SkraatKast.tsx` is a pre-scaffold variant pending migration.
+3. The sim component itself is `"use client"`, wraps `<SimulationFrame>` (which absorbs slider state, the canvas wrapper, and the stat row), and lifts lab-tunable values into a top-of-file `LAB_CONFIG`. [src/components/sims/TemplateLab.tsx](src/components/sims/TemplateLab.tsx) is the canonical reference; `SkraatKast.tsx` is a pre-scaffold variant pending migration.
 
 ### p5 sketch conventions
 
@@ -107,12 +109,15 @@ Tailwind v4 (CSS-first, configured via PostCSS — no `tailwind.config.ts`). Top
 [src/app/emner/\[topic\]/\[lab\]/page.tsx](src/app/emner/[topic]/[lab]/page.tsx) is the single template that renders every lab. It reads optional fields off the `LabConfig` and conditionally renders sections via [LabPageContent.tsx](src/components/LabPageContent.tsx).
 
 Routing logic, top-down:
-- Background sections (Formål, Centrale begreber, Nøgleligning, Teori) render whenever the corresponding fields are set; collapsible when a guide is present.
-- If `lab.guide` is set → render `<LabTemplate>` (the only guide implementation).
-- Otherwise → if `simulationId` is set, render `<Simulation>`; if `observations` is set, render the "I laboratoriet" list.
-- If `goal` and `keyConcepts` are missing, the "Under udarbejdelse" placeholder is appended.
+- Background sections (Formål, Centrale begreber, Nøgleligning, Teori) render whenever the corresponding fields are set; collapsible when the lab is `kind: "guided"`.
+- The main content branches on `lab.kind`:
+  - `"guided"` → `<LabTemplate>` (the only guide implementation), plus a collapsible simulation dropdown when `simulationId` is set.
+  - `"simulation"` → standalone `<Simulation>`.
+  - `"observations"` → the "I laboratoriet" ordered list.
+  - `"stub"` → no main content (placeholder only).
+- If `goal` and `keyConcepts` are missing, the "Under udarbejdelse" placeholder is appended regardless of kind.
 
-New optional fields on `LabConfig` should be added to [types.ts](src/content/types.ts) and rendered conditionally in `LabPageContent`, following the existing pattern.
+New variants or fields on `LabConfig` should be added to [types.ts](src/content/types.ts) and handled in the `kind` switch in `LabPageContent`, following the existing pattern.
 
 ### Lab guide system
 

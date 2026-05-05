@@ -1,6 +1,7 @@
 import type { LabConfig } from "@/content/types";
 
 export const bevarelseMekaniskEnerg: LabConfig = {
+  kind: "simulation",
   slug: "bevarelse-af-mekanisk-energi",
   title: "Bevarelse af mekanisk energi",
   shortDescription:

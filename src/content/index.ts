@@ -5,7 +5,7 @@ import { elektriskeKredsloeb } from "./topics/elektriske-kredsloeb";
 import { boelger } from "./topics/boelger";
 import { atomfysik } from "./topics/atomfysik";
 import { termodynamik } from "./topics/termodynamik";
-import { testTemplate } from "./topics/test-template";
+import { template } from "./topics/template";
 
 export const topics: Topic[] = [
   mekanik,
@@ -14,5 +14,5 @@ export const topics: Topic[] = [
   boelger,
   atomfysik,
   termodynamik,
-  testTemplate,
+  template,
 ];

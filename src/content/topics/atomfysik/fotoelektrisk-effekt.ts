@@ -1,6 +1,7 @@
 import type { LabConfig } from "@/content/types";
 
 export const fotoelektriskEffekt: LabConfig = {
+  kind: "simulation",
   slug: "fotoelektrisk-effekt",
   title: "Den fotoelektriske effekt",
   shortDescription:

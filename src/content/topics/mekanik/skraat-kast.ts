@@ -1,6 +1,7 @@
 import type { LabConfig } from "@/content/types";
 
 export const skraatKast: LabConfig = {
+  kind: "simulation",
   slug: "skraat-kast",
   title: "Skråt kast",
   shortDescription:

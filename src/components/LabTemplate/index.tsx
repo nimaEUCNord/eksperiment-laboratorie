@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
-import type { LabConfig, LabGuide } from "@/content/types";
+import type { GuidedLab, LabGuide } from "@/content/types";
 import type { AccentClasses } from "@/lib/accent";
 import { useLabGuidePersistence } from "@/hooks/useLabGuidePersistence";
 import { reducer, extractPersistedSlice } from "./state/reducer";
@@ -24,7 +24,7 @@ const styles = `
 `;
 
 interface LabTemplateProps {
-  lab: LabConfig;
+  lab: GuidedLab;
   guide: LabGuide;
   accent: AccentClasses;
   simKey: number;

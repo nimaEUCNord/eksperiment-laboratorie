@@ -364,7 +364,7 @@ const selects = [
   },
 ];
 
-export default function TemplateForsog() {
+export default function TemplateLab() {
   return (
     <SimulationFrame<TemplateProps>
       sketch={sketch}

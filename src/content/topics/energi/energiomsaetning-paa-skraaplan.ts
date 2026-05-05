@@ -1,6 +1,7 @@
 import type { LabConfig } from "@/content/types";
 
 export const energiomsaetningPaaSkraaplan: LabConfig = {
+  kind: "simulation",
   slug: "energiomsaetning-paa-skraaplan",
   title: "Energiomsætning på skråplan",
   shortDescription:
