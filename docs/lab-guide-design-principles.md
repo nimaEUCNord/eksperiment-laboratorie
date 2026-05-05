@@ -259,26 +259,11 @@ if (mode === "guidet") {
 
 ## Lab-Specific Configuration
 
-Each lab in `content/topics.ts` should define which phases to include and how to configure them:
+Each lab is one `LabConfig` object exported from `src/content/topics/[topic]/[slug].ts`. `LabConfig` is a discriminated union (`kind: "stub" | "simulation" | "observations" | "guided"`); a lab using this 6-phase template is `kind: "guided"` with a nested `LabGuide` object.
 
-```typescript
-type LabGuideConfig = {
-  phases: ("plan" | "setup" | "measure" | "analyze" | "conclude" | "report")[]
-  minDataPoints?: number         // Default: 4
-  analysisParameter?: string     // What to estimate (e.g., "k (N/m)")
-  referenceValue?: number        // Theory or simulation value
-  reportRequired?: boolean       // Default: false
-}
+The authoritative schema lives in [src/content/types.ts](../src/content/types.ts). The canonical reference lab — full `LabConfig` with every guide field populated — is [src/content/topics/template/template-lab.ts](../src/content/topics/template/template-lab.ts). The runtime architecture (component topology, persistence, ChartConfig specifics, walkthrough for adding a new lab) is documented in [docs/lab-template-architecture.md](./lab-template-architecture.md).
 
-// Example: Template-forsøg
-const templateLabConfig: LabGuideConfig = {
-  phases: ["plan", "setup", "measure", "analyze", "conclude"],
-  minDataPoints: 4,
-  analysisParameter: "g (m/s²)",
-  referenceValue: 9.82,           // Theoretical value
-  reportRequired: false,
-}
-```
+The phase set itself is fixed in the implementation (`PHASES` in `src/components/LabTemplate/types.ts`), not configurable per-lab — what varies per lab are the prompts, validation flags, materials, chart, and reflection content carried in the `LabGuide`.
 
 ---
 
