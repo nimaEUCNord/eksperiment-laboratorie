@@ -13,6 +13,7 @@ Last updated: 2026-05-04 (revised)
 - [ ] Copy paste protection on input fields — Prevent students from pasting pre-written answers into hypothesis, variable, and reflection fields to ensure genuine engagement.
 - [ ] Choice between different hypothesis instead of open text field — Replace the free-text hypothesis input with a multiple-choice selector so students pick the best hypothesis from a set of plausible options (configured per lab in `guide.hypothesisOptions`).
 - [ ] Evaluation of student answers — Structured scoring or quality assessment of student-written responses (hypothesis, reflections) against expected keywords or criteria defined in the lab config.
+- [ ] Trigger hook on "Afslut guide" — Fire a configurable callback/hook when the student clicks "Afslut guide" so labs can run custom completion logic (e.g. save results, unlock next steps, notify teacher).
 - [ ] Implement AI feedback directly (API request) — Call the Anthropic Claude API to give students contextual, qualitative feedback on their hypothesis and reflection answers in real time, without revealing the correct answer.
 
 ## 💡 Ideas (Backlog)
@@ -22,6 +23,7 @@ Last updated: 2026-05-04 (revised)
 - [ ] Possible removal of Tyngdekraft box in `TemplateLab` — Students can already read the force value from the dynamometer pointer; the stat box may be redundant. Decide whether to keep it as a learning aid or remove it to push students to read the instrument. See `LAB_CONFIG.stats.force` and the `stats` callback in [src/components/sims/TemplateLab.tsx](src/components/sims/TemplateLab.tsx).
 
 ## 🐛 Known Issues / Bugs
+- [ ] Verify deviation calculation is correct — Check that the computed deviation/afvigelse in the analysis phase uses the right formula and produces correct results across different data sets.
 - **Phase 1 answer reveal too fast** — Students get the right answer instantly after entering a wrong answer, defeating pedagogical purpose. Needs smarter feedback mechanism that guides without giving away the answer.
 - **Phase 2 materials list disappears** — The materials list in Phase 2 (Opstil) intermittently vanishes. Root cause unknown; investigate rendering/state conditions that cause the list to not render.
 
