@@ -106,11 +106,6 @@ function Field({ label, placeholder, value, onChange, onBlur, isError, validated
             : "border-slate-200 focus:ring-sky-400"
         }`}
       />
-      {validated && !isError && (
-        <div className="mt-1 flex items-center gap-1">
-          <span className="text-sm text-green-500">✓</span>
-        </div>
-      )}
       {validated && isError && showAnswers && (mode === "guidet" || showAnswers) && expected && (
         <div className="mt-1 flex items-center gap-1">
           <span className="text-xs text-slate-500">
