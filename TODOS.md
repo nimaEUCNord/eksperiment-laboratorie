@@ -25,7 +25,7 @@ Last updated: 2026-05-04 (revised)
 - **Phase 2 materials list disappears** — The materials list in Phase 2 (Opstil) intermittently vanishes. Root cause unknown; investigate rendering/state conditions that cause the list to not render.
 
 ## 🔧 Refactoring / Tech Debt
-- [ ] Migrate `HookesLov` and `SkraatKast` to `SimulationFrame` — Both sims still inline their own `SliderField`, canvas wrapper, and (Hookes only) `Stat` row. The scaffold in [src/components/sims/SimulationFrame.tsx](src/components/sims/SimulationFrame.tsx) absorbs all of that; `TemplateForsog.tsx` is the reference for the migration pattern.
+- [ ] Migrate `SkraatKast` to `SimulationFrame` — The sim still inlines its own `SliderField` and canvas wrapper. The scaffold in [src/components/sims/SimulationFrame.tsx](src/components/sims/SimulationFrame.tsx) absorbs all of that; `TemplateForsog.tsx` is the reference for the migration pattern.
 - [ ] Decide whether `TjekFeedback`'s "correct" emerald box should also drop its border/background to match the new bare-text wrong-state style — currently asymmetric (wrong = bare orange via `PhaseLockHint`, correct = boxed emerald). Either downgrade correct to a single emerald-600 line for visual symmetry, or document the deliberate asymmetry (boxed = success affirmation).
 - [ ] Revisit Tjek button enable/disable states in Phase 1 — buttons currently dim via `opacity-40` when `canAdvanceVars`/`canAdvanceHyp` is true, which inverts the usual "disabled = dim" intuition. Consider clarifying or unifying with how the Næste-fase button behaves elsewhere.
 - [ ] Audit other phases (2 Opstil, 4 Analysér, 5 Konkludér) for boxed-hint patterns that should adopt the new `PhaseLockHint` shared component — keeps lock/hint visuals consistent across the whole guide.

@@ -270,12 +270,12 @@ type LabGuideConfig = {
   reportRequired?: boolean       // Default: false
 }
 
-// Example: Hooke's Law
-const hookesLawConfig: LabGuideConfig = {
+// Example: Template-forsøg
+const templateLabConfig: LabGuideConfig = {
   phases: ["plan", "setup", "measure", "analyze", "conclude"],
   minDataPoints: 4,
-  analysisParameter: "k (N/m)",
-  referenceValue: 5,              // Simulation spring constant
+  analysisParameter: "g (m/s²)",
+  referenceValue: 9.82,           // Theoretical value
   reportRequired: false,
 }
 ```

@@ -16,10 +16,6 @@ const sims: Record<string, ComponentType> = {
     ssr: false,
     loading: SimulationLoading,
   }),
-  "hookes-lov": dynamic(() => import("./sims/HookesLov"), {
-    ssr: false,
-    loading: SimulationLoading,
-  }),
   "template-forsog": dynamic(() => import("./sims/TemplateForsog"), {
     ssr: false,
     loading: SimulationLoading,

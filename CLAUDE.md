@@ -44,7 +44,6 @@ src/content/
 └── topics/
     ├── mekanik/
     │   ├── index.ts                  (exports Topic + LabConfig[] for this topic)
-    │   ├── hookes-lov.ts             (full LabConfig with guide)
     │   ├── skraat-kast.ts
     │   └── ...
     ├── energi/
@@ -75,7 +74,7 @@ Simulations are React client components living in `src/components/sims/`. The ro
 
 1. The lab data references a sim by string id (`LabConfig.simulationId`).
 2. [src/components/Simulation.tsx](src/components/Simulation.tsx) maps each id to a `next/dynamic` import with `ssr: false` and a shared `SimulationLoading` fallback. **A new sim must be registered here** or the lab page falls back to a "kommer her" placeholder.
-3. The sim component itself is `"use client"`, owns the slider React state, and renders a `<P5Canvas>` from `@p5-wrapper/react` plus a stat row and slider panel. [src/components/sims/HookesLov.tsx](src/components/sims/HookesLov.tsx) is the cleanest reference; `SkraatKast.tsx` is the older variant.
+3. The sim component itself is `"use client"`, wraps `<SimulationFrame>` (which absorbs slider state, the canvas wrapper, and the stat row), and lifts lab-tunable values into a top-of-file `LAB_CONFIG`. [src/components/sims/TemplateForsog.tsx](src/components/sims/TemplateForsog.tsx) is the canonical reference; `SkraatKast.tsx` is a pre-scaffold variant pending migration.
 
 ### p5 sketch conventions
 
