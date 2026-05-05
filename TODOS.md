@@ -9,8 +9,13 @@ Last updated: 2026-05-04 (revised)
 - [ ] Phase 3 data export to CSV/Excel — Add button in Phase 3 to export measurement data, constants, and metadata so students can save their data for further analysis. Offer CSV as the simple option and Excel (.xlsx) for a structured file with headers and calculated values.
 - [ ] Remove "fx" placeholder hints from Phase 1 variable input fields — The example text in the variable fields may be giving too much away; remove or replace with neutral placeholders.
 - [ ] Make hints and attempts visually consistent across all Tjek interactions — Currently the feedback UI (attempt counter, hint text, correct/wrong highlighting) differs between Tjek Variabler and Tjek Hypotese in Phase 1. Unify into a shared visual language.
+- [ ] Copy paste protection on input fields — Prevent students from pasting pre-written answers into hypothesis, variable, and reflection fields to ensure genuine engagement.
+- [ ] Choice between different hypothesis instead of open text field — Replace the free-text hypothesis input with a multiple-choice selector so students pick the best hypothesis from a set of plausible options (configured per lab in `guide.hypothesisOptions`).
+- [ ] Evaluation of student answers — Structured scoring or quality assessment of student-written responses (hypothesis, reflections) against expected keywords or criteria defined in the lab config.
+- [ ] Implement AI feedback directly (API request) — Call the Anthropic Claude API to give students contextual, qualitative feedback on their hypothesis and reflection answers in real time, without revealing the correct answer.
 
 ## 💡 Ideas (Backlog)
+- [ ] Erhvervsrettet udvidelse — For each lab, add an optional section with ideas for how the experiment relates to or can be extended into specific trades (e.g. elektrikerfaget, bygge & anlæg), bridging the physics to vocational contexts.
 - [ ] Offline mode — Enable the site to function without internet access (e.g. service worker / PWA caching) so students can run lab guides in classrooms with poor connectivity.
 - [ ] Print lab guide option — Add a print-friendly view of the lab guide (all phases, student answers, results) so students or teachers can produce a paper copy or PDF of completed work.
 - [ ] Possible removal of Tyngdekraft box in `TemplateForsog` — Students can already read the force value from the dynamometer pointer; the stat box may be redundant. Decide whether to keep it as a learning aid or remove it to push students to read the instrument. See `LAB_CONFIG.stats.force` and the `stats` callback in [src/components/sims/TemplateForsog.tsx](src/components/sims/TemplateForsog.tsx).
