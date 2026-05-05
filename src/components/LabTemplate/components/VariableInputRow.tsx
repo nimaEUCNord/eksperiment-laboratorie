@@ -109,7 +109,9 @@ function Field({ label, placeholder, value, onChange, onBlur, isError, validated
       {validated && isError && showAnswers && (mode === "guidet" || showAnswers) && expected && (
         <div className="mt-1 flex items-center gap-1">
           <span className="text-xs text-slate-500">
-            Forventet: {Array.isArray(expected) ? expected.join(" eller ") : expected}
+            {Array.isArray(expected) && expected.length > 1
+              ? `${expected.slice(0, -1).join(", ")} eller ${expected[expected.length - 1]}`
+              : Array.isArray(expected) ? expected[0] : expected}
           </span>
         </div>
       )}
