@@ -209,18 +209,7 @@ export const [camelCaseSlug]: LabConfig = {
 
 ---
 
-### Komponentnoter
-
-The lab is fully driven by the config above — no new component files are needed unless the lab requires a brand-new simulation or chart shape that the current `MeasurementChart` cannot express.
-
-**Where things live:**
-- [src/components/LabTemplate.tsx](src/components/LabTemplate.tsx) — single guide implementation; renders all 5 phases for any `LabConfig.guide`
-- [src/components/MeasurementChart.tsx](src/components/MeasurementChart.tsx) — generic Chart.js scatter; tweak `chart.fitMode` (through-origin / free / none) and `xScale` / `yScale` to map raw measurement values to plotted units
-- [src/components/Simulation.tsx](src/components/Simulation.tsx) — register a new sim id here if you're adding one
-
-**Reference labs:**
-- [src/content/topics/test-template/template-forsog.ts](src/content/topics/test-template/template-forsog.ts) — canonical scaffolded reference
-- [src/content/topics/mekanik/hookes-lov.ts](src/content/topics/mekanik/hookes-lov.ts) — production lab with embedded sim, chart with mass→force conversion, fit-through-origin
+For component locations and reference labs, see [docs/lab-template-architecture.md](../../../docs/lab-template-architecture.md).
 
 ---
 
