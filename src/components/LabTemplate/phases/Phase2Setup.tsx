@@ -1,6 +1,7 @@
+import { useEffect, useRef } from "react";
 import Image from "next/image";
 import HintBox from "@/components/HintBox";
-import type { PhaseProps } from "../types";
+import type { PhaseProps, RealPhase } from "../types";
 import { usePhase2State } from "../hooks/usePhase2State";
 import EmbeddedSim from "../components/EmbeddedSim";
 import PhaseNav from "../components/PhaseNav";
@@ -16,9 +17,21 @@ export default function Phase2Setup({
   onAdvance,
   onRetreat,
   onRequestReset,
+  onRegisterAdvanceHandler,
 }: PhaseProps) {
   const phase2 = usePhase2State(state, dispatch, guide);
   const mode = phase2.mode;
+
+  const advanceHandlerRef = useRef<((t?: RealPhase) => void) | null>(null);
+  advanceHandlerRef.current = (targetPhase?: RealPhase) => {
+    if (!guide.bypassLocks && !phase2.checkConditions()) return;
+    onAdvance(targetPhase);
+  };
+
+  useEffect(() => {
+    onRegisterAdvanceHandler((t) => advanceHandlerRef.current?.(t));
+    return () => onRegisterAdvanceHandler(null);
+  }, [onRegisterAdvanceHandler]);
 
   return (
     <div className="mt-8 space-y-6">
@@ -127,7 +140,12 @@ export default function Phase2Setup({
         ))}
       </div>
 
-      <PhaseNav accent={accent} onPrev={onRetreat} onNext={onAdvance} />
+      <PhaseNav
+        accent={accent}
+        onPrev={onRetreat}
+        onNext={() => advanceHandlerRef.current?.()}
+        nextDisabled={!guide.bypassLocks && !phase2.checkConditions()}
+      />
 
       <ResetWorkButton onClick={onRequestReset} />
     </div>
