@@ -4,6 +4,8 @@ import { usePhase4State } from "../hooks/usePhase4State";
 import EmbeddedSim from "../components/EmbeddedSim";
 import PhaseNav from "../components/PhaseNav";
 import ResetWorkButton from "../components/ResetWorkButton";
+import PhaseIntroBox from "../components/PhaseIntroBox";
+import { DEFAULT_PHASE_INTROS } from "../constants/defaultPhaseIntros";
 
 export default function Phase4Analyse({
   state,
@@ -17,15 +19,13 @@ export default function Phase4Analyse({
   onRequestReset,
 }: PhaseProps) {
   const phase4 = usePhase4State(state, dispatch, guide);
+  const mode = phase4.mode;
 
   return (
     <div className="mt-8 space-y-6">
-      <h3 className="text-lg font-semibold text-slate-900">Fase 4 — Analysér</h3>
-
-      <div className={`rounded-xl border ${accent.border} ${accent.bgSoft} p-4 text-sm text-slate-700`}>
-        <p className="font-medium text-slate-800">Analysér dine resultater:</p>
-        <p className="mt-2 text-slate-600">Sammenlign dine målinger med den teoretiske værdi.</p>
-      </div>
+      {mode === "guidet" && (
+        <PhaseIntroBox accent={accent} content={guide.phase4Intro ?? DEFAULT_PHASE_INTROS[4]} />
+      )}
 
       <EmbeddedSim
         phaseId="analyser"

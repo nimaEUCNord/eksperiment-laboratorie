@@ -6,6 +6,8 @@ import VariableHeaderCell from "../components/VariableHeaderCell";
 import PhaseNav from "../components/PhaseNav";
 import PhaseLockHint from "../components/PhaseLockHint";
 import ResetWorkButton from "../components/ResetWorkButton";
+import PhaseIntroBox from "../components/PhaseIntroBox";
+import { DEFAULT_PHASE_INTROS } from "../constants/defaultPhaseIntros";
 
 const handleNumberInputWheel = (e: React.WheelEvent<HTMLInputElement>) => {
   e.currentTarget.blur();
@@ -39,18 +41,8 @@ export default function Phase3Measure({
 
   return (
     <div className="mt-8 space-y-6">
-      <h3 className="text-lg font-semibold text-slate-900">Fase 3 — Mål</h3>
-
       {mode === "guidet" && (
-        <div className={`rounded-xl border ${accent.border} ${accent.bgSoft} p-4 text-sm text-slate-700`}>
-          <p className="font-medium text-slate-800">Dataindsamling:</p>
-          <p className="mt-2 text-slate-600">
-            {guide.dataCollectionGuidance ||
-              `Indsaml mindst ${phase3.minMeasurements}${
-                phase3.suggestedMeasurements ? `-${phase3.suggestedMeasurements}` : ""
-              } målinger. Hvis et felt kan beregnes automatisk, udfyldes det af sig selv.`}
-          </p>
-        </div>
+        <PhaseIntroBox accent={accent} content={guide.phase3Intro ?? DEFAULT_PHASE_INTROS[3]} />
       )}
 
       <EmbeddedSim

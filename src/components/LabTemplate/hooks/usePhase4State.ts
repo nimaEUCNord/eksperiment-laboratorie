@@ -151,6 +151,7 @@ export function usePhase4State(
   const checkConditions = (): boolean => state.studentValue.trim() !== "";
 
   return {
+    mode: state.mode,
     studentValue: state.studentValue,
     rows: state.rows,
     setStudentValue,

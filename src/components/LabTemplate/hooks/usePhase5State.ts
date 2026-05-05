@@ -8,6 +8,7 @@ export function usePhase5State(state: GuideState, dispatch: Dispatch<Action>) {
   const setShowFacit = (value: boolean) => dispatch({ type: "setShowFacit", value });
 
   return {
+    mode: state.mode,
     reflections: state.reflections,
     showFacit: state.showFacit,
     updateReflection,

@@ -2,6 +2,8 @@ import type { PhaseProps } from "../types";
 import { usePhase5State } from "../hooks/usePhase5State";
 import ResetWorkButton from "../components/ResetWorkButton";
 import ActionButton from "../components/ActionButton";
+import PhaseIntroBox from "../components/PhaseIntroBox";
+import { DEFAULT_PHASE_INTROS } from "../constants/defaultPhaseIntros";
 
 export default function Phase5Conclude({
   state,
@@ -12,6 +14,7 @@ export default function Phase5Conclude({
   onRequestReset,
 }: PhaseProps) {
   const phase5 = usePhase5State(state, dispatch);
+  const mode = phase5.mode;
 
   const handleFinish = () => {
     dispatch({ type: "setMode", mode: null });
@@ -20,7 +23,9 @@ export default function Phase5Conclude({
 
   return (
     <div className="mt-8 space-y-6">
-      <h3 className="text-lg font-semibold text-slate-900">Fase 5 — Konkludér</h3>
+      {mode === "guidet" && (
+        <PhaseIntroBox accent={accent} content={guide.phase5Intro ?? DEFAULT_PHASE_INTROS[5]} />
+      )}
 
       {guide.reflectionQuestions && guide.reflectionQuestions.length > 0 && (
         <div className="space-y-6">

@@ -6,6 +6,8 @@ import { usePhase2State } from "../hooks/usePhase2State";
 import EmbeddedSim from "../components/EmbeddedSim";
 import PhaseNav from "../components/PhaseNav";
 import ResetWorkButton from "../components/ResetWorkButton";
+import PhaseIntroBox from "../components/PhaseIntroBox";
+import { DEFAULT_PHASE_INTROS } from "../constants/defaultPhaseIntros";
 
 export default function Phase2Setup({
   state,
@@ -35,17 +37,8 @@ export default function Phase2Setup({
 
   return (
     <div className="mt-8 space-y-6">
-      <h3 className="text-lg font-semibold text-slate-900">Fase 2 — Opstil</h3>
-
       {mode === "guidet" && (
-        <div className={`rounded-xl border ${accent.border} ${accent.bgSoft} p-4 text-sm text-slate-700`}>
-          <p className="font-medium text-slate-800">Forberedelsestrin:</p>
-          <ol className="mt-3 list-decimal list-inside space-y-2 text-slate-600">
-            <li>Saml dine materialer og tjek, at alt er klar.</li>
-            <li>Gør dig selv bekendt med måleudstyr og målemetoder.</li>
-            <li>Planlæg hvordan du registrerer data systematisk.</li>
-          </ol>
-        </div>
+        <PhaseIntroBox accent={accent} content={guide.phase2Intro ?? DEFAULT_PHASE_INTROS[2]} />
       )}
 
       {mode === "semi" && (

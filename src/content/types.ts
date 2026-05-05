@@ -1,5 +1,10 @@
 import type { StaticImageData } from "next/image";
 
+export type PhaseIntroContent = {
+  heading: string;
+  body: string | string[];
+};
+
 export type Variable = {
   name: string;
   type: "independent" | "dependent" | "control" | "derived";
@@ -29,6 +34,7 @@ export type ChartConfig = {
 
 export type LabGuide = {
   // Phase 1 — Planlæg
+  phase1Intro?: PhaseIntroContent;
   hypothesis?: string;
   hypothesisPlaceholder?: string;
   hypothesisKeywords?: string[];
@@ -41,23 +47,26 @@ export type LabGuide = {
   variableHints?: string[];
 
   // Phase 2 — Opstil
+  phase2Intro?: PhaseIntroContent;
   materials?: string[];
   materialImages?: Record<string, StaticImageData>;
   setupItems?: string[];
 
   // Phase 3 — Mål
+  phase3Intro?: PhaseIntroContent;
   minMeasurements?: number;
   suggestedMeasurements?: number;
-  dataCollectionGuidance?: string;
   blockOnMissingConstants?: boolean;
 
   // Phase 4 — Analysér
+  phase4Intro?: PhaseIntroContent;
   chart?: ChartConfig;
   theoreticalValue?: number;
   theoreticalValueUnit?: string;
   deviationThreshold?: number;
 
   // Phase 5 — Konkludér
+  phase5Intro?: PhaseIntroContent;
   reflectionQuestions?: string[];
   facit?: string;
 
