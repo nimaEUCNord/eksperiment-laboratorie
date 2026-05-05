@@ -106,7 +106,7 @@ Tailwind v4 (CSS-first, configured via PostCSS — no `tailwind.config.ts`). Top
 
 ### Lab page rendering
 
-[src/app/emner/\[topic\]/\[lab\]/page.tsx](src/app/emner/[topic]/[lab]/page.tsx) is the single template that renders every lab. It reads optional fields off the `LabConfig` and conditionally renders sections via [LabPageContent.tsx](src/components/LabPageContent.tsx).
+[src/app/emner/\[topic\]/\[lab\]/page.tsx](src/app/emner/[topic]/[lab]/page.tsx) is the single template that renders every lab. The main content branches on `lab.kind` in [LabPageContent.tsx](src/components/LabPageContent.tsx); background sections render whenever the corresponding `LabBase` fields are set.
 
 Routing logic, top-down:
 - Background sections (Formål, Centrale begreber, Nøgleligning, Teori) render whenever the corresponding fields are set; collapsible when the lab is `kind: "guided"`.
@@ -121,7 +121,7 @@ New variants or fields on `LabConfig` should be added to [types.ts](src/content/
 
 ### Lab guide system
 
-Setting `guide: { ... }` on a `LabConfig` replaces the simulation/observations sections with an interactive lab guide. Students choose one of three scaffolding modes (Guidet / Semi-guidet / Åben undersøgelse). The guide flows through five phases: Planlæg → Opstil → Mål → Analysér → Konkludér.
+A `kind: "guided"` lab carries a `guide: LabGuide` object that drives an interactive lab guide instead of a standalone simulation or observations list. Students choose one of three scaffolding modes (Guidet / Semi-guidet / Åben undersøgelse). The guide flows through five phases: Planlæg → Opstil → Mål → Analysér → Konkludér.
 
 All new lab guides follow the **6-phase reusable template** documented in [docs/lab-guide-design-principles.md](docs/lab-guide-design-principles.md). The implementation today covers phases 1–5; **Reportér** (phase 6) is opt-in.
 
