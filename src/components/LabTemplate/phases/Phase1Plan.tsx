@@ -4,6 +4,7 @@ import { usePhase1State } from "../hooks/usePhase1State";
 import VariableInputRow from "../components/VariableInputRow";
 import ResetWorkButton from "../components/ResetWorkButton";
 import TjekFeedback from "../components/TjekFeedback";
+import ActionButton from "../components/ActionButton";
 
 export default function Phase1Plan({
   state,
@@ -184,27 +185,26 @@ export default function Phase1Plan({
         </button>
         <div className="flex gap-2">
           {mode !== "open" && guide.validateVariableInputs && guide.variables && (
-            <button
+            <ActionButton
+              accent={accent}
+              dimmed={canAdvanceVars}
               onClick={() => phase1.checkVariables()}
-              className={`rounded-xl px-6 py-2.5 text-sm font-medium text-white transition-opacity ${accent.bg} ${canAdvanceVars ? "opacity-40" : ""}`}
             >
               Tjek variable
-            </button>
+            </ActionButton>
           )}
           {mode !== "open" && guide.validateHypothesis && !!guide.hypothesisKeywords?.length && (
-            <button
+            <ActionButton
+              accent={accent}
+              dimmed={canAdvanceHyp}
               onClick={() => phase1.checkHypothesis()}
-              className={`rounded-xl px-6 py-2.5 text-sm font-medium text-white transition-opacity ${accent.bg} ${canAdvanceHyp ? "opacity-40" : ""}`}
             >
               Tjek hypotese
-            </button>
+            </ActionButton>
           )}
-          <button
-            onClick={handleNext}
-            className={`rounded-xl px-6 py-2.5 text-sm font-medium text-white transition-opacity ${accent.bg} ${canAdvance ? "" : "opacity-40"}`}
-          >
+          <ActionButton accent={accent} dimmed={!canAdvance} onClick={handleNext}>
             Næste fase →
-          </button>
+          </ActionButton>
         </div>
       </div>
 

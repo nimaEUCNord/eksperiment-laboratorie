@@ -1,6 +1,7 @@
 import type { PhaseProps } from "../types";
 import { usePhase5State } from "../hooks/usePhase5State";
 import ResetWorkButton from "../components/ResetWorkButton";
+import ActionButton from "../components/ActionButton";
 
 export default function Phase5Conclude({
   state,
@@ -40,12 +41,9 @@ export default function Phase5Conclude({
 
       {guide.facit && (
         <div>
-          <button
-            onClick={() => phase5.setShowFacit(!phase5.showFacit)}
-            className={`rounded-xl px-4 py-2 text-sm font-medium text-white ${accent.bg}`}
-          >
+          <ActionButton accent={accent} onClick={() => phase5.setShowFacit(!phase5.showFacit)}>
             {phase5.showFacit ? "Skjul" : "Vis"} facit
-          </button>
+          </ActionButton>
           {phase5.showFacit && (
             <div className={`mt-4 rounded-xl border ${accent.border} ${accent.bgSoft} p-4 text-sm text-slate-700`}>
               <p className="font-medium text-slate-800 mb-2">Facit:</p>
@@ -59,12 +57,9 @@ export default function Phase5Conclude({
         <button onClick={onRetreat} className="text-sm text-slate-500 hover:underline">
           ← Forrige fase
         </button>
-        <button
-          onClick={handleFinish}
-          className={`rounded-xl px-6 py-2.5 text-sm font-medium text-white ${accent.bg}`}
-        >
+        <ActionButton accent={accent} onClick={handleFinish}>
           Afslut guide
-        </button>
+        </ActionButton>
       </div>
 
       <ResetWorkButton onClick={onRequestReset} />

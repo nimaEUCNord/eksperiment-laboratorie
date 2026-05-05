@@ -1,4 +1,5 @@
 import type { AccentClasses } from "@/lib/accent";
+import ActionButton from "./ActionButton";
 
 interface PhaseNavProps {
   accent: AccentClasses;
@@ -22,13 +23,9 @@ export default function PhaseNav({
       <button onClick={onPrev} className="text-sm text-slate-500 hover:underline">
         {prevLabel}
       </button>
-      <button
-        onClick={() => onNext()}
-        disabled={nextDisabled}
-        className={`rounded-xl px-6 py-2.5 text-sm font-medium text-white ${accent.bg} disabled:opacity-50 disabled:cursor-not-allowed`}
-      >
+      <ActionButton accent={accent} disabled={nextDisabled} onClick={() => onNext()}>
         {nextLabel}
-      </button>
+      </ActionButton>
     </div>
   );
 }
