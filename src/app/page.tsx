@@ -13,7 +13,7 @@ export default function HomePage() {
             Fysik · HTX
           </span>
           <h1 className="mt-6 text-4xl font-semibold leading-tight text-slate-900 sm:text-5xl">
-            Eksperiment Laboratorie
+            HTXLabs
           </h1>
           <p className="mt-4 text-lg text-slate-600 sm:text-xl">
             Forsøg og interaktive simulationer til fysikundervisningen. Vælg et

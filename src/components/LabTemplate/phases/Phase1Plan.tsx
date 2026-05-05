@@ -142,7 +142,7 @@ export default function Phase1Plan({
             ? (guide.variableHints?.[phase1.varAttempts - 1] ?? "Prøv igen.")
             : "Alle variable er korrekte."
         }
-        counter={{ current: correctCount, total: totalFields, label: "Korrekte variable" }}
+        counter={{ current: correctCount, total: totalFields, label: "Korrekte svar" }}
         attemptsLeft={hasAnyError && !phase1.isAttemptsExhausted ? phase1.attemptsLeft : undefined}
       />
 

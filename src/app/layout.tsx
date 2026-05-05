@@ -18,8 +18,8 @@ const fraunces = Fraunces({
 
 export const metadata: Metadata = {
   title: {
-    default: "Eksperiment Laboratorie",
-    template: "%s · Eksperiment Laboratorie",
+    default: "HTXLabs",
+    template: "%s · HTXLabs",
   },
   description:
     "Fysikforsøg og interaktive simulationer til HTX. Mekanik, el og magnetisme – samlet ét sted.",

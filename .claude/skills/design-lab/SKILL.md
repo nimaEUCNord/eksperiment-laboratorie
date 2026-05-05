@@ -1,7 +1,7 @@
 ---
 name: design-lab
 description: >
-  Design a new physics lab guide for Eksperiment Laboratorie following the standard 6-phase template
+  Design a new physics lab guide for HTXLabs following the standard 6-phase template
   (Planlæg → Opstil → Mål → Analysér → Konkludér → Reportér) with 3 scaffolding modes
   (Guidet, Semi-guidet, Åben undersøgelse). Use this skill whenever the user types /design-lab,
   asks to "design a new lab", "create a lab guide", "add a new lab", or wants to build a new
@@ -11,7 +11,7 @@ description: >
 
 # Design Lab Skill
 
-You are helping design a new interactive physics lab guide for **Eksperiment Laboratorie** — a Danish-language HTX Fysik A platform. Every lab guide follows a standard 6-phase structure with three scaffolding modes.
+You are helping design a new interactive physics lab guide for **HTXLabs** — a Danish-language HTX Fysik A platform. Every lab guide follows a standard 6-phase structure with three scaffolding modes.
 
 ## Step 1: Read the design principles
 

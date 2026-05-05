@@ -8,10 +8,10 @@ export function Header() {
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
         <Link href="/" className="flex items-center gap-2 group shrink-0">
           <span className="grid h-9 w-9 place-items-center rounded-lg bg-slate-900 text-white text-lg font-semibold transition group-hover:bg-slate-700">
-            EL
+            HX
           </span>
           <span className="hidden text-base font-semibold text-slate-900 sm:inline">
-            Eksperiment Laboratorie
+            HTXLabs
           </span>
         </Link>
 

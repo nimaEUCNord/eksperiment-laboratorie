@@ -1,7 +1,7 @@
 # Lab Guide Design Principles: 6-Phase Structure
 
 ## Overview
-This document defines the standard 6-phase lab guide structure for Eksperiment Laboratorie. All interactive physical and simulated labs should follow this structure to provide consistency, reusability, and pedagogical coherence across the platform.
+This document defines the standard 6-phase lab guide structure for HTXLabs. All interactive physical and simulated labs should follow this structure to provide consistency, reusability, and pedagogical coherence across the platform.
 
 **Target audience:** HTX Fysik B and A students (ages 16–19)  
 **Pedagogical balance:** Inquiry-based learning + practical procedure training  

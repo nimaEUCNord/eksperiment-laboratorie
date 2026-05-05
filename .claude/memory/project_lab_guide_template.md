@@ -1,9 +1,9 @@
 ---
 name: Lab Guide 6-Phase Template
-description: Standard 6-phase structure for all new lab guides in Eksperiment Laboratorie — simulated and physical labs
+description: Standard 6-phase structure for all new lab guides in HTXLabs — simulated and physical labs
 type: project
 ---
-All new lab guides for Eksperiment Laboratorie follow a **6-phase reusable template** with three scaffolding modes. This is the agreed design standard.
+All new lab guides for HTXLabs follow a **6-phase reusable template** with three scaffolding modes. This is the agreed design standard.
 
 **Phases:** Planlæg → Opstil → Mål → Analysér → Konkludér → Reportér
 
